@@ -65,7 +65,7 @@ export const ModulePage = () => {
         {/* Menu Headers and Programs */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <p className="mt-4 text-gray-600">Loading menus...</p>
           </div>
         ) : error ? (
@@ -82,7 +82,7 @@ export const ModulePage = () => {
                   className="bg-gradient-to-br from-white to-gray-50 rounded-lg border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
                 >
                   {/* Header Section - Distinctive styling */}
-                  <div className="bg-gradient-to-r from-cyan-500 to-teal-500 px-4 py-3 border-b-2 border-cyan-600">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3 border-b-2 border-blue-700">
                     <h3 className="text-base font-bold text-white">
                       {menu.menuHeader}
                     </h3>
@@ -91,18 +91,18 @@ export const ModulePage = () => {
                   {/* Programs Section */}
                   <div className="p-4">
                     {menu.programs.length > 0 ? (
-                      <ol className="space-y-2">
+                      <ol className="space-y-1">
                         {menu.programs.map((program, index) => (
                           <li
                             key={program.programCode}
-                            className="flex items-start group hover:bg-cyan-50 rounded-md p-2 -ml-2 transition-colors"
+                            className="flex items-start group hover:bg-blue-50 rounded-md p-2 -ml-2 transition-colors"
                           >
-                            <span className="text-cyan-600 font-semibold mr-2 mt-0.5 min-w-[1.5rem] text-xs">
+                            <span className="text-blue-600 font-semibold mr-2 mt-0.5 min-w-[1.5rem] text-xs">
                               {index + 1}.
                             </span>
                             <Link
                               to={`/module/${moduleCode}/${program.programCode}`}
-                              className="text-gray-700 group-hover:text-cyan-700 font-medium flex-1 hover:underline cursor-pointer text-xs whitespace-nowrap overflow-hidden text-ellipsis"
+                              className="text-gray-700 group-hover:text-blue-700 font-medium flex-1 hover:underline cursor-pointer text-xs whitespace-nowrap overflow-hidden text-ellipsis"
                               title={program.programName}
                             >
                               {program.programName}
