@@ -3,11 +3,11 @@ import { TransCodeRepository } from '../repositories/TransCodeRepository';
 import type { TKN_STATEMENT, TKN_BAKHUTANG } from '../types/database.types';
 
 export interface StatementWithDescription extends TKN_STATEMENT {
-  TRA_TRANSDESC?: string | null;
+  TRA_TRANSNAME?: string | null;
 }
 
 export interface BakhutangWithDescription extends TKN_BAKHUTANG {
-  TRA_TRANSDESC?: string | null;
+  TRA_TRANSNAME?: string | null;
 }
 
 export interface StatementResponse {
@@ -44,19 +44,19 @@ export class StatementService {
     const transCodeMap = new Map<string, string | null>();
     for (const code of transCodes) {
       const transCode = await this.transCodeRepository.findByCodeAndModuleType(code, 'T');
-      transCodeMap.set(code, transCode?.TRA_TRANSDESC || null);
+      transCodeMap.set(code, transCode?.TRA_TRANSNAME || null);
     }
 
     // Add descriptions to statements
     const statementsWithDesc: StatementWithDescription[] = statements.map(stmt => ({
       ...stmt,
-      TRA_TRANSDESC: transCodeMap.get(stmt.STA_TRANSCODE) || null,
+      TRA_TRANSNAME: transCodeMap.get(stmt.STA_TRANSCODE) || null,
     }));
 
     // Add descriptions to bakhutang
     const bakhutangWithDesc: BakhutangWithDescription[] = bakhutang.map(bak => ({
       ...bak,
-      TRA_TRANSDESC: transCodeMap.get(bak.BAK_TRANSCODE) || null,
+      TRA_TRANSNAME: transCodeMap.get(bak.BAK_TRANSCODE) || null,
     }));
 
     // Calculate totals

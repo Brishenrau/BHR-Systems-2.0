@@ -229,7 +229,7 @@ export const StatementPage = () => {
                           {stmt.STA_TRANSCODE}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-200">
-                          {stmt.TRA_TRANSDESC || stmt.STA_TRANSCODE}
+                          {stmt.TRA_TRANSNAME || stmt.STA_TRANSCODE}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-center text-gray-900 border-r border-gray-200">
                           {stmt.STA_TRANSDRCR}
@@ -310,7 +310,7 @@ export const StatementPage = () => {
                     return (
                       <tr key={`${bak.BAK_NOMBAKAUN}-${bak.BAK_NOMSERIAL}-${bak.BAK_TRANSCODE}`} className="hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-200">
-                          {bak.BAK_TRANSCODE} {bak.TRA_TRANSDESC || ''}
+                          {bak.BAK_TRANSCODE} {bak.TRA_TRANSNAME || ''}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-900 border-r border-gray-200">
                           {formatCurrency(bak.BAK_AMAUNCURR)}

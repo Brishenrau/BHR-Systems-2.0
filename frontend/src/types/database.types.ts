@@ -85,7 +85,7 @@ export interface TKN_STATEMENT {
   STA_PUSATKTPN?: string | null;
   STA_ENTRYOPER: string;
   STA_ENTRYDATE: Date | string;
-  TRA_TRANSDESC?: string | null;
+  TRA_TRANSNAME?: string | null;
 }
 
 export interface TKN_BAKHUTANG {
@@ -98,7 +98,7 @@ export interface TKN_BAKHUTANG {
   BAK_AMAUNLBIH: number;
   BAK_ENTRYOPER: string;
   BAK_ENTRYDATE: Date | string;
-  TRA_TRANSDESC?: string | null;
+  TRA_TRANSNAME?: string | null;
 }
 
 export interface StatementResponse {

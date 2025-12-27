@@ -103,7 +103,7 @@ export interface TKN_BAKHUTANG {
 export interface UTL_TRANSCODE {
   TRA_TRANSCODE: string;
   TRA_MODULTYPE: string;
-  TRA_TRANSDESC?: string | null;
+  TRA_TRANSNAME?: string | null;
   // Add other fields as needed
 }
 

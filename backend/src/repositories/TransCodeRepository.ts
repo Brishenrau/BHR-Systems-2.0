@@ -16,7 +16,7 @@ export class TransCodeRepository extends BaseRepository<UTL_TRANSCODE> {
       SELECT 
         TRA_TRANSCODE,
         TRA_MODULTYPE,
-        TRA_TRANSDESC
+        TRA_TRANSNAME
       FROM ${this.getFullTableName()}
       WHERE TRA_TRANSCODE = :transCode
         AND TRA_MODULTYPE = :moduleType
@@ -36,7 +36,7 @@ export class TransCodeRepository extends BaseRepository<UTL_TRANSCODE> {
       SELECT 
         TRA_TRANSCODE,
         TRA_MODULTYPE,
-        TRA_TRANSDESC
+        TRA_TRANSNAME
       FROM ${this.getFullTableName()}
       WHERE TRA_MODULTYPE = :moduleType
       ORDER BY TRA_TRANSCODE
