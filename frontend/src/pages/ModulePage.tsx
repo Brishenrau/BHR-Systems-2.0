@@ -1,47 +1,14 @@
 import { useParams } from 'react-router-dom';
+import { useMenu } from '../hooks/useMenu';
 
 export const ModulePage = () => {
   const { moduleCode } = useParams<{ moduleCode: string }>();
+  const { menuItems } = useMenu();
   
-  // Convert module code to readable name
-  const moduleNames: Record<string, string> = {
-    'BELANJAWAN': 'Belanjawan',
-    'PEMBAYARAN': 'Pembayaran',
-    'GAJI': 'Gaji',
-    'PINJAMAN': 'Pinjaman',
-    'PELABURAN': 'Pelaburan',
-    'MOHON_BAYARAN': 'Mohon Bayaran',
-    'AHLI_MAJLIS': 'Ahli Majlis',
-    'PERSONEL': 'Personel',
-    'TUNTUTAN': 'Tuntutan',
-    'STOK': 'Stok',
-    'ASET_INVENTORI': 'Aset/Inventori',
-    'PEROLEHAN': 'Perolehan',
-    'PERAKAUNAN': 'Perakaunan',
-    'PERANCANG': 'Perancang',
-    'BANGUNAN': 'Bangunan',
-    'KEJURUTERAAN': 'Kejuruteraan',
-    'LANSKAP': 'Landskap',
-    'MARRIS': 'MARRIS',
-    'MPSAS': 'MPSAS',
-    'TUNGGAKAN': 'Tunggakan',
-    'PENGURUSAN': 'Pengurusan',
-    'PROJEK': 'Projek',
-    'SISTEM_OSC': 'Sistem OSC',
-    'PENILAIAN': 'Penilaian',
-    'AUDIT': 'Audit',
-    'KUTIPAN': 'Kutipan',
-    'TAKSIRAN': 'Taksiran',
-    'PELESENAN': 'Pelesenan',
-    'SEWAAN': 'Sewaan',
-    'PELBAGAI': 'Pelbagai',
-    'KOMPAUN': 'Kompaun',
-    'UTILITI': 'Utiliti',
-    'KOD_GUNASAMA': 'Kod Gunasama',
-    'PERIBADI': 'Peribadi',
-  };
-
-  const moduleName = moduleNames[moduleCode || ''] || moduleCode || 'Module';
+  // Find the program name from the menu data
+  const allPrograms = menuItems.flatMap(item => item.programs);
+  const currentProgram = allPrograms.find(p => p.programCode === moduleCode);
+  const moduleName = currentProgram?.programName || moduleCode || 'Module';
 
   return (
     <div className="max-w-7xl mx-auto">

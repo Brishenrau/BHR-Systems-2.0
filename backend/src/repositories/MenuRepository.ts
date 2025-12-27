@@ -27,6 +27,7 @@ export class MenuRepository extends BaseRepository<BHR_MENHEADER> {
   /**
    * Get menu with programs for a user
    * This combines BHR_MENHEADER and BHR_PGRAMCODE
+   * If menu headers don't exist, programs are still returned grouped by menu number
    */
   async getUserMenu(payNumber?: string): Promise<MenuItem[]> {
     // Get all menu headers
@@ -46,8 +47,19 @@ export class MenuRepository extends BaseRepository<BHR_MENHEADER> {
     
     const allPrograms = await this.query<BHR_PGRAMCODE>(programsSql);
     
+    // If no programs exist, return empty array
+    if (allPrograms.length === 0) {
+      return [];
+    }
+    
     // Group programs by menu number
     const menuMap = new Map<number, ProgramItem[]>();
+    const menuHeaderMap = new Map<number, string>();
+    
+    // Create map of menu headers
+    menus.forEach((menu) => {
+      menuHeaderMap.set(menu.MEN_MENNUMBER, menu.MEN_MENHEADER);
+    });
     
     allPrograms.forEach((program) => {
       const programItem: ProgramItem = {
@@ -63,14 +75,28 @@ export class MenuRepository extends BaseRepository<BHR_MENHEADER> {
       menuMap.get(program.PGR_MENNUMBER)!.push(programItem);
     });
     
-    // Combine menus with their programs
-    const menuItems: MenuItem[] = menus.map((menu) => ({
-      menuNumber: menu.MEN_MENNUMBER,
-      menuHeader: menu.MEN_MENHEADER,
-      programs: menuMap.get(menu.MEN_MENNUMBER) || [],
-    }));
-    
-    return menuItems;
+    // If menu headers exist, use them; otherwise create menu items from program menu numbers
+    if (menus.length > 0) {
+      // Combine menus with their programs
+      const menuItems: MenuItem[] = menus.map((menu) => ({
+        menuNumber: menu.MEN_MENNUMBER,
+        menuHeader: menu.MEN_MENHEADER,
+        programs: menuMap.get(menu.MEN_MENNUMBER) || [],
+      }));
+      
+      return menuItems;
+    } else {
+      // No menu headers, but we have programs - create menu items from menu numbers
+      const menuItems: MenuItem[] = Array.from(menuMap.keys())
+        .sort((a, b) => a - b)
+        .map((menuNumber) => ({
+          menuNumber,
+          menuHeader: menuHeaderMap.get(menuNumber) || `Menu ${menuNumber}`,
+          programs: menuMap.get(menuNumber) || [],
+        }));
+      
+      return menuItems;
+    }
   }
 
   /**
