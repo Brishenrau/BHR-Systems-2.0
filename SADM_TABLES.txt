@@ -1,0 +1,70 @@
+create table BHR_PAYNUMBER
+(USE_PAYNUMBER		varchar2(12)	not null,		-- SPER.PER_MASTERREC.MAS_PAYNUMBER
+ USE_PTJPKCODE		varchar2(6)	not null,		-- SUTL.UTL_PTJPKCODE.PTJ_PTJPKCODE
+ USE_SHORTNAME		number(20)	not null,		-- Free Text
+ USE_USERLEVEL		varchar2(1)	default 'U',		-- 1,..9
+ USE_STATUSFLG		varchar2(1)	default 'Y',		-- Active Status [Y]es [N]o
+ USE_ENTRYOPER		varchar2(10)	not null,		-- :global.GLO_PAYNUMBER
+ USE_ENTRYDATE		date		sysdate,		-- Server system datetime
+ USE_MODFYOPER		varchar2(10),				-- :global.GLO_PAYNUMBER
+ USE_MODFYDATE		date,					-- Server system datetime
+ constraint BHR_PAYNUMBERPK primary key(USE_PAYNUMBER)
+)
+/
+
+create table BHR_MODULCODE
+(MOD_MODULCODE		varchar2(4)	not null,		-- SPER.PER_MASTERREC.MAS_PAYNUMBER
+ MOD_MODULSIRI		number(2)	not null,		-- SUTL.UTL_PTJPKCODE.PTJ_PTJPKCODE
+ MOD_MODULNAME		number(30)	not null,		-- Free Text
+ MOD_STATUSFLG		varchar2(1)	default 'Y',		-- Active Status [Y]es [N]o
+ MOD_ENTRYOPER		varchar2(10)	not null,		-- :global.GLO_PAYNUMBER
+ MOD_ENTRYDATE		date		sysdate,		-- Server system datetime
+ MOD_MODFYOPER		varchar2(10),				-- :global.GLO_PAYNUMBER
+ MOD_MODFYDATE		date,					-- Server system datetime
+ constraint BHR_MODULCODEPK primary key(MOD_MODULCODE)
+)
+/
+
+create table BHR_ACCESSMDL
+(ACC_PAYNUMBER		varchar2(12)	not null,		-- SADM.BHR_PAYNUMBER.USE_PAYNUMBER
+ ACC_MODACCESS		varchar2(60)	not null,		-- default 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT'
+ ACC_STATUSFLG		varchar2(1)	default 'Y',		-- Active Status [Y]es [N]o
+ ACC_ENTRYOPER		varchar2(10)	not null,		-- :global.GLO_PANUMBER
+ ACC_ENTRYDATE		date		sysdate,		-- Server system datetime
+ ACC_MODFYOPER		varchar2(10),				-- :global.GLO_PAYNUMBER
+ ACC_MODFYDATE		date,					-- Server system datetime
+ constraint BHR_ACCESSMDLPK primary key(ACC_PAYNUMBER)
+)
+/
+
+create table BHR_MENHEADER
+(MEN_MENNUMBER		number(2)	not null,
+ MEN_MENHEADER		varchar2(20)	not null,
+ MEN_ENTRYOPER		varchar2(10)	not null,		-- :global.GLO_PAYNUMBER
+ MEN_ENTRYDATE		date		sysdate,		-- Server system datetime
+ MEN_MODFYOPER		varchar2(10),				-- :global.GLO_PAYNUMBER
+ MEN_MODFYDATE		date,					-- Server system datetime
+ constraint BHR_MENHEADERPK primary key(MEN_MENNUMBER)
+)
+/
+
+create table BHR_PGRAMCODE
+(PGR_PGRAMCODE		varchar2(13)	not null,		-- XXX_PGRAMCODE
+ PGR_MODULCODE		varchar2(4)	not null,		-- SADM.BHR_MODULCODE.MOD_MODULCODE
+ PGR_MENNUMBER		number(2)	not null,		-- SADM.BHR_MENHEADER.MEN_MENNUMBER
+ PGR_PGRAMNAME		varchar2(60)	not null,
+ PGR_SEQUENCED		number(2)	not null,		-- 
+ PGR_ENTRYOPER		varchar2(10)	not null,		-- :global.GLO_PAYNUMBER
+ PGR_ENTRYDATE		date		sysdate,		-- Server system datetime
+ PGR_MODFYOPER		varchar2(10),				-- :global.GLO_PAYNUMBER
+ PGR_MODFYDATE		date,					-- Server system datetime
+ constraint BHR_PGRAMCODEPK primary key(PGR_PGRAMCODE, PGR_MODULCODE)
+)
+/
+
+
+
+
+
+
+
