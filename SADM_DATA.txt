@@ -1,0 +1,22 @@
+SQL> select * from BHR_PAYNUMBER;
+
+USE_PAYNUMBE USE_PASSWORDS                  USE_PT USE_SHORTNAME        U U USE_ENTRYO USE_ENTRY USE_MODFYO USE_MODFY
+------------ ------------------------------ ------ -------------------- - - ---------- --------- ---
+10703        10703                          020100 DanZai               9 Y 10703      27-DEC-25
+18817        18817                          020100 DanZai               9 Y 10703      27-DEC-25
+
+SQL> select * from BHR_MODULCODE;
+
+MOD_ MOD_MODULSIRI MOD_MODULNAME                            M MOD_ENTRYO MOD_ENTRY MOD_MODFYO MOD_MODFY
+---- ------------- ---------------------------------------- - ---------- --------- ---------- ------
+SADM             1 PENTADBIR SISTEM                         Y 10703      27-DEC-25
+SUTL             2 KOD GUNASAMA                             Y 10703      27-DEC-25
+SPER             3 PERSONELIA                               Y 10703      27-DEC-25
+SPAY             4 GAJI                                     Y 10703      27-DEC-25
+
+SQL> select * from BHR_ACCESSMDL;
+
+ACC_PAYNUMBE ACC_MODACCESS                                                A ACC_ENTRYO ACC_ENTRY ACC_MODFYO ACC_MODFY
+------------ ------------------------------------------------------------ - ---------- --------- ---
+10703        YYYYTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT Y 10703      27-DEC-25
+18817        TTYYTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT Y 10703      27-DEC-25
