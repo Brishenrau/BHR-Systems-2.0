@@ -102,7 +102,7 @@ export interface TKN_BAKHUTANG {
 // SUTL Schema Types - Common Codes
 export interface UTL_TRANSCODE {
   TRA_TRANSCODE: string;
-  TRA_MODULETYPE: string;
+  TRA_MODULTYPE: string;
   TRA_TRANSDESC?: string | null;
   // Add other fields as needed
 }

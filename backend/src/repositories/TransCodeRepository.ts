@@ -15,11 +15,11 @@ export class TransCodeRepository extends BaseRepository<UTL_TRANSCODE> {
     const sql = `
       SELECT 
         TRA_TRANSCODE,
-        TRA_MODULETYPE,
+        TRA_MODULTYPE,
         TRA_TRANSDESC
       FROM ${this.getFullTableName()}
       WHERE TRA_TRANSCODE = :transCode
-        AND TRA_MODULETYPE = :moduleType
+        AND TRA_MODULTYPE = :moduleType
     `;
     
     return await this.queryOne(sql, {
@@ -35,10 +35,10 @@ export class TransCodeRepository extends BaseRepository<UTL_TRANSCODE> {
     const sql = `
       SELECT 
         TRA_TRANSCODE,
-        TRA_MODULETYPE,
+        TRA_MODULTYPE,
         TRA_TRANSDESC
       FROM ${this.getFullTableName()}
-      WHERE TRA_MODULETYPE = :moduleType
+      WHERE TRA_MODULTYPE = :moduleType
       ORDER BY TRA_TRANSCODE
     `;
     
