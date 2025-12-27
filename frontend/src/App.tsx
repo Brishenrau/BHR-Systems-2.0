@@ -20,8 +20,8 @@ const ProgramRoute = () => {
     return <ModuleCodePage />;
   }
   
-  // KAWALAN PENCAPAIAN MODUL program
-  if (programCode === 'ADM_ACCESCODE') {
+  // KAWALAN PENCAPAIAN MODUL program - handle both possible codes
+  if (programCode === 'ADM_ACCESCODE' || programCode === 'BHR_ACCESSMDL') {
     return <UserAccessPage />;
   }
   
