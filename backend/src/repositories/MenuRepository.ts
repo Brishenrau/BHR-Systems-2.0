@@ -45,7 +45,8 @@ export class MenuRepository extends BaseRepository<BHR_MENHEADER> {
       ORDER BY PGR_MENNUMBER, PGR_SEQUENCED
     `;
     
-    return await executeQuery<BHR_PGRAMCODE>(sql, [moduleCode]);
+    // Use object for named bind parameters
+    return await executeQuery<BHR_PGRAMCODE>(sql, { moduleCode });
   }
 
   /**

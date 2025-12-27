@@ -104,6 +104,16 @@ export class MenuService {
     // Get all programs for this specific module
     const modulePrograms = await this.menuRepository.getProgramsByModule(moduleCode);
     
+    console.log(`[getModuleMenus] Module: ${moduleCode}, Found ${modulePrograms.length} programs`);
+    if (modulePrograms.length > 0) {
+      console.log(`[getModuleMenus] Sample program:`, {
+        code: modulePrograms[0].PGR_PGRAMCODE,
+        module: modulePrograms[0].PGR_MODULCODE,
+        menuNumber: modulePrograms[0].PGR_MENNUMBER,
+        name: modulePrograms[0].PGR_PGRAMNAME
+      });
+    }
+    
     // Group programs by menu number
     const menuMap = new Map<number, ProgramItem[]>();
     
@@ -121,6 +131,9 @@ export class MenuService {
       menuMap.get(program.PGR_MENNUMBER)!.push(programItem);
     });
     
+    console.log(`[getModuleMenus] Menu numbers with programs:`, Array.from(menuMap.keys()));
+    console.log(`[getModuleMenus] Available menu headers:`, allMenus.map(m => ({ number: m.MEN_MENNUMBER, header: m.MEN_MENHEADER })));
+    
     // Only include menu headers that have programs for this module
     const moduleMenus: MenuItem[] = allMenus
       .filter((menu) => menuMap.has(menu.MEN_MENNUMBER))
@@ -129,6 +142,8 @@ export class MenuService {
         menuHeader: menu.MEN_MENHEADER,
         programs: menuMap.get(menu.MEN_MENNUMBER)!.sort((a, b) => a.sequence - b.sequence),
       }));
+    
+    console.log(`[getModuleMenus] Returning ${moduleMenus.length} menu items`);
     
     return moduleMenus;
   }
