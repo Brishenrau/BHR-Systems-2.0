@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { moduleService } from '../services/module.service';
 import type { ApiError } from '../types/api.types';
+import type { BHR_MODULCODE } from '../types/database.types';
 
 export const ModuleCodePage = () => {
   const navigate = useNavigate();
@@ -13,6 +14,26 @@ export const ModuleCodePage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [modules, setModules] = useState<BHR_MODULCODE[]>([]);
+  const [loadingModules, setLoadingModules] = useState(true);
+
+  // Fetch all modules on component mount
+  useEffect(() => {
+    const loadModules = async () => {
+      try {
+        setLoadingModules(true);
+        const allModules = await moduleService.getAllModules();
+        // Filter to show only active modules
+        setModules(allModules.filter(m => m.MOD_STATUSFLG === 'Y'));
+      } catch (err) {
+        console.error('Failed to load modules:', err);
+      } finally {
+        setLoadingModules(false);
+      }
+    };
+
+    loadModules();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,10 +66,14 @@ export const ModuleCodePage = () => {
         MOD_STATUSFLG: 'Y',
       });
 
-      // Optionally navigate or refresh
+      // Reload modules list
+      const allModules = await moduleService.getAllModules();
+      setModules(allModules.filter(m => m.MOD_STATUSFLG === 'Y'));
+
+      // Clear success message after 3 seconds
       setTimeout(() => {
-        navigate('/');
-      }, 1500);
+        setSuccess(false);
+      }, 3000);
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Failed to create module');
@@ -167,6 +192,85 @@ export const ModuleCodePage = () => {
             </button>
           </div>
         </form>
+
+        {/* Active Modules List */}
+        <div className="mt-12 pt-8 border-t border-gray-200">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Active Modules</h2>
+          
+          {loadingModules ? (
+            <div className="text-center py-8">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-500"></div>
+              <p className="mt-2 text-gray-600">Loading modules...</p>
+            </div>
+          ) : modules.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
+                <thead className="bg-gradient-to-r from-cyan-500 to-teal-500">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                      Sequence
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                      Module Code
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                      Module Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                      Created By
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                      Created Date
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {modules.map((module, index) => (
+                    <tr key={module.MOD_MODULCODE} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {module.MOD_MODULSIRI}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono font-semibold text-cyan-600">
+                        {module.MOD_MODULCODE}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {module.MOD_MODULNAME}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          module.MOD_STATUSFLG === 'Y' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {module.MOD_STATUSFLG === 'Y' ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {module.MOD_ENTRYOPER}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {module.MOD_ENTRYDATE 
+                          ? new Date(module.MOD_ENTRYDATE).toLocaleDateString('en-MY', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })
+                          : '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+              <p className="text-gray-600">No active modules found</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
