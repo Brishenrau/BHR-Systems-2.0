@@ -83,7 +83,7 @@ export const ModulePage = () => {
                 >
                   {/* Header Section - Distinctive styling */}
                   <div className="bg-gradient-to-r from-cyan-500 to-teal-500 px-4 py-3 border-b-2 border-cyan-600">
-                    <h3 className="text-lg font-bold text-white">
+                    <h3 className="text-base font-bold text-white">
                       {menu.menuHeader}
                     </h3>
                   </div>
@@ -97,12 +97,13 @@ export const ModulePage = () => {
                             key={program.programCode}
                             className="flex items-start group hover:bg-cyan-50 rounded-md p-2 -ml-2 transition-colors"
                           >
-                            <span className="text-cyan-600 font-semibold mr-2 mt-0.5 min-w-[1.5rem]">
+                            <span className="text-cyan-600 font-semibold mr-2 mt-0.5 min-w-[1.5rem] text-xs">
                               {index + 1}.
                             </span>
                             <Link
                               to={`/module/${moduleCode}/${program.programCode}`}
-                              className="text-gray-700 group-hover:text-cyan-700 font-medium flex-1 hover:underline cursor-pointer"
+                              className="text-gray-700 group-hover:text-cyan-700 font-medium flex-1 hover:underline cursor-pointer text-xs whitespace-nowrap overflow-hidden text-ellipsis"
+                              title={program.programName}
                             >
                               {program.programName}
                             </Link>
