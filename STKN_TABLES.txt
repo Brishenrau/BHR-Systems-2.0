@@ -1,0 +1,51 @@
+PEG_NOMBORLOT                                                                                                  VARCHAR2(40)
+PEG_ALAMATHRT                                                                                                  VARCHAR2(229)
+PEG_XCORDINAT                                                                                                  NUMBER(30,10)
+PEG_YCORDINAT                                                                                                  NUMBER(30,10)
+PEG_PERATUSAN                                                                                                  NUMBER(5,2)
+PEG_NILAIBARU                                                                                                  NUMBER(18,2)
+PEG_KADARTHUN                                                                                                  NUMBER(8,5)
+PEG_CUKAIBARU                                                                                                  NUMBER
+MIL_STATSBILL                                                                                                  VARCHAR2(1)
+MIL_TRANSBILL                                                                                                  VARCHAR2(9)
+MIL_STATSPNTY                                                                                                  VARCHAR2(1)
+MIL_TRANSPNTY                                                                                                  VARCHAR2(9)
+MIL_STATSNTIS                                                                                                  VARCHAR2(1)
+MIL_TRANSNTIS                                                                                                  VARCHAR2(9)
+MIL_STATSWRAN                                                                                                  VARCHAR2(1)
+MIL_TRANSWRAN                                                                                                  VARCHAR2(9)
+BAK_BAKHUTANG                                                                                                  NUMBER
+BAK_TGKHUTANG                                                                                                  NUMBER
+BAK_BYLEBIHAN                                                                                                  NUMBER
+
+QL> desc stkn.tkn_statement
+Name                                                                                                  Null?    Type
+---------------------------------------------------------------------------------------------------
+STA_NOMBAKAUN                                                                                         NOT NULL NUMBER(7)
+STA_NOMSERIAL                                                                                         NOT NULL NUMBER(2)
+STA_TARIKHTRX                                                                                         NOT NULL DATE
+STA_TARIKHPOS                                                                                                  DATE
+STA_REFERENCE                                                                                         NOT NULL VARCHAR2(12)
+STA_TRANSCODE                                                                                         NOT NULL VARCHAR2(9)
+STA_TRANSTYPE                                                                                         NOT NULL VARCHAR2(1)
+STA_STATTRANS                                                                                                  VARCHAR2(1)
+STA_TRANSDRCR                                                                                         NOT NULL VARCHAR2(1)
+STA_AMOUNTTRX                                                                                         NOT NULL NUMBER(15,2)
+STA_CARABAYAR                                                                                                  VARCHAR2(1)
+STA_NDOCUMENT                                                                                                  VARCHAR2(16)
+STA_PUSATKTPN                                                                                                  VARCHAR2(2)
+STA_ENTRYOPER                                                                                         NOT NULL VARCHAR2(10)
+STA_ENTRYDATE                                                                                         NOT NULL DATE
+
+QL> desc stkn.tkn_bakhutang
+Name                                                                                                  Null?    Type
+---------------------------------------------------------------------------------------------------
+BAK_NOMBAKAUN                                                                                         NOT NULL NUMBER(7)
+BAK_NOMSERIAL                                                                                         NOT NULL NUMBER(2)
+BAK_TRANSCODE                                                                                         NOT NULL VARCHAR2(9)
+BAK_AMAUNCURR                                                                                         NOT NULL NUMBER(15,2)
+BAK_AMAUNTHUN                                                                                         NOT NULL NUMBER(15,2)
+BAK_AMAUNTNGK                                                                                         NOT NULL NUMBER(15,2)
+BAK_AMAUNLBIH                                                                                         NOT NULL NUMBER(15,2)
+BAK_ENTRYOPER                                                                                         NOT NULL VARCHAR2(10)
+BAK_ENTRYDATE                                                                                         NOT NULL DATE
