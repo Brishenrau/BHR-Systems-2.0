@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface ProfilePictureProps {
   name?: string;
@@ -29,24 +29,33 @@ export const ProfilePicture: React.FC<ProfilePictureProps> = ({
     lg: 'w-3.5 h-3.5',
   };
 
-  const initial = name?.charAt(0).toUpperCase() || 'U';
+  // Get initial from name (first character)
+  const getInitial = () => {
+    if (!name || name.trim() === '') return 'U';
+    const firstChar = name.charAt(0);
+    // If it's a number, show the number; otherwise uppercase the letter
+    return isNaN(Number(firstChar)) ? firstChar.toUpperCase() : firstChar;
+  };
+
+  const initial = getInitial();
 
   // Reset error state when imageUrl changes
-  React.useEffect(() => {
-    setImageError(false);
+  useEffect(() => {
+    if (imageUrl) {
+      setImageError(false);
+    }
   }, [imageUrl]);
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error('Failed to load profile image:', imageUrl?.substring(0, 50) + '...');
-    console.error('Image error event:', e);
+  const handleImageError = () => {
     setImageError(true);
   };
 
-  const shouldShowImage = imageUrl && !imageError;
+  // Show image only if we have a valid imageUrl and no error
+  const showImage = imageUrl && !imageError && imageUrl.trim() !== '';
 
   return (
     <div className="relative inline-block">
-      {shouldShowImage ? (
+      {showImage ? (
         <img
           src={imageUrl}
           alt={name || 'User'}

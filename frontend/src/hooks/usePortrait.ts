@@ -15,16 +15,27 @@ export const usePortrait = (payNumber: string | null | undefined) => {
       try {
         setLoading(true);
         const url = await portraitService.getPortrait(payNumber);
-        setImageUrl(url);
+        // Only set if we got a valid URL
+        if (url && url.trim() !== '') {
+          setImageUrl(url);
+        } else {
+          setImageUrl(null);
+        }
       } catch (error) {
-        console.error('Failed to load portrait:', error);
+        // Silently fail - just don't set imageUrl, component will show default avatar
+        console.warn('Portrait loading failed, using default avatar:', error);
         setImageUrl(null);
       } finally {
         setLoading(false);
       }
     };
 
-    loadPortrait();
+    // Only load if we have a payNumber
+    if (payNumber) {
+      loadPortrait();
+    } else {
+      setImageUrl(null);
+    }
   }, [payNumber]);
 
   return { imageUrl, loading };
