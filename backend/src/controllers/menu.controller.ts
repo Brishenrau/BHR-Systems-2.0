@@ -1,0 +1,56 @@
+import { Request, Response, NextFunction } from 'express';
+import { MenuService } from '../services/menu.service';
+
+const menuService = new MenuService();
+
+export class MenuController {
+  /**
+   * Get user menu endpoint
+   */
+  async getUserMenu(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      // Get pay number from authenticated user
+      const payNumber = req.user?.payNumber;
+      
+      if (!payNumber) {
+        res.status(401).json({
+          success: false,
+          message: 'User not authenticated',
+        });
+        return;
+      }
+
+      const menus = await menuService.getUserMenu(payNumber);
+
+      res.json({
+        success: true,
+        data: menus,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to get user menu',
+      });
+    }
+  }
+
+  /**
+   * Get all programs endpoint
+   */
+  async getAllPrograms(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const programs = await menuService.getAllPrograms();
+
+      res.json({
+        success: true,
+        data: programs,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to get programs',
+      });
+    }
+  }
+}
+
