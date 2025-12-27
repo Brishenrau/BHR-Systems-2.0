@@ -8,6 +8,7 @@ import { ProgramCodePage } from './pages/ProgramCodePage';
 import { MenuHeaderPage } from './pages/MenuHeaderPage';
 import { ProgramPage } from './pages/ProgramPage';
 import { UserAccessPage } from './pages/UserAccessPage';
+import { StatementPage } from './pages/StatementPage';
 import { NotFound } from './pages/NotFound';
 import { Layout } from './components/layout/Layout';
 import { ProtectedRoute } from './components/features/auth/ProtectedRoute';
@@ -35,6 +36,11 @@ const ProgramRoute = () => {
   // KOD TAJUK MENU program
   if (programCode === 'BHR_MENHEADER') {
     return <MenuHeaderPage />;
+  }
+  
+  // PENYATA CUKAI TAKSIRAN program
+  if (programCode === 'TKN_STATEMENT') {
+    return <StatementPage />;
   }
   
   // All other programs go to ProgramPage

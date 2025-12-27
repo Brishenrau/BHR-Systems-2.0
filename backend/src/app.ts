@@ -9,6 +9,7 @@ import accessRoutes from './routes/access.routes';
 import portraitRoutes from './routes/portrait.routes';
 import programRoutes from './routes/program.routes';
 import menuHeaderRoutes from './routes/menuHeader.routes';
+import statementRoutes from './routes/statement.routes';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 
 // Load environment variables
@@ -48,6 +49,7 @@ app.use('/api/v1/access', accessRoutes);
 app.use('/api/v1/portrait', portraitRoutes);
 app.use('/api/v1/programs', programRoutes);
 app.use('/api/v1/menu-headers', menuHeaderRoutes);
+app.use('/api/v1/statements', statementRoutes);
 
 // Error handling
 app.use(notFoundHandler);

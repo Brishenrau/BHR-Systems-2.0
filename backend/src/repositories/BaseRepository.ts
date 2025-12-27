@@ -49,14 +49,14 @@ export abstract class BaseRepository<T> {
   /**
    * Execute custom query
    */
-  protected async query(sql: string, binds: any[] = []): Promise<T[]> {
+  protected async query(sql: string, binds: any[] | Record<string, any> = []): Promise<T[]> {
     return await executeQuery<T>(sql, binds);
   }
 
   /**
    * Execute custom query returning single row
    */
-  protected async queryOne(sql: string, binds: any[] = []): Promise<T | null> {
+  protected async queryOne(sql: string, binds: any[] | Record<string, any> = []): Promise<T | null> {
     return await executeQueryOne<T>(sql, binds);
   }
 

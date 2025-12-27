@@ -68,3 +68,42 @@ export interface ProgramItem {
   sequence: number;
 }
 
+// STKN Schema Types - Taksiran (Assessment) Module
+export interface TKN_STATEMENT {
+  STA_NOMBAKAUN: number;
+  STA_NOMSERIAL: number;
+  STA_TARIKHTRX: Date | string;
+  STA_TARIKHPOS?: Date | string | null;
+  STA_REFERENCE: string;
+  STA_TRANSCODE: string;
+  STA_TRANSTYPE: string;
+  STA_STATTRANS?: string | null;
+  STA_TRANSDRCR: string; // 'D' for Debit, 'K' for Credit
+  STA_AMOUNTTRX: number;
+  STA_CARABAYAR?: string | null;
+  STA_NDOCUMENT?: string | null;
+  STA_PUSATKTPN?: string | null;
+  STA_ENTRYOPER: string;
+  STA_ENTRYDATE: Date | string;
+}
+
+export interface TKN_BAKHUTANG {
+  BAK_NOMBAKAUN: number;
+  BAK_NOMSERIAL: number;
+  BAK_TRANSCODE: string;
+  BAK_AMAUNCURR: number;
+  BAK_AMAUNTHUN: number;
+  BAK_AMAUNTNGK: number;
+  BAK_AMAUNLBIH: number;
+  BAK_ENTRYOPER: string;
+  BAK_ENTRYDATE: Date | string;
+}
+
+// SUTL Schema Types - Common Codes
+export interface UTL_TRANSCODE {
+  TRA_TRANSCODE: string;
+  TRA_MODULETYPE: string;
+  TRA_TRANSDESC?: string | null;
+  // Add other fields as needed
+}
+
