@@ -1,4 +1,5 @@
 import { BaseRepository } from './BaseRepository';
+import { executeQuery } from '../config/database';
 import type { BHR_MENHEADER, BHR_PGRAMCODE, MenuItem, ProgramItem } from '../types/database.types';
 
 export class MenuRepository extends BaseRepository<BHR_MENHEADER> {
@@ -21,7 +22,30 @@ export class MenuRepository extends BaseRepository<BHR_MENHEADER> {
       ORDER BY MEN_MENNUMBER
     `;
     
-    return await this.query<BHR_MENHEADER>(sql);
+    return await this.query(sql);
+  }
+
+  /**
+   * Get programs for a specific module
+   */
+  async getProgramsByModule(moduleCode: string): Promise<BHR_PGRAMCODE[]> {
+    const sql = `
+      SELECT 
+        PGR_PGRAMCODE,
+        PGR_MODULCODE,
+        PGR_MENNUMBER,
+        PGR_PGRAMNAME,
+        PGR_SEQUENCED,
+        PGR_ENTRYOPER,
+        PGR_ENTRYDATE,
+        PGR_MODFYOPER,
+        PGR_MODFYDATE
+      FROM SADM.BHR_PGRAMCODE
+      WHERE PGR_MODULCODE = :moduleCode
+      ORDER BY PGR_MENNUMBER, PGR_SEQUENCED
+    `;
+    
+    return await executeQuery<BHR_PGRAMCODE>(sql, [moduleCode]);
   }
 
   /**
@@ -29,7 +53,7 @@ export class MenuRepository extends BaseRepository<BHR_MENHEADER> {
    * This combines BHR_MENHEADER and BHR_PGRAMCODE
    * If menu headers don't exist, programs are still returned grouped by menu number
    */
-  async getUserMenu(payNumber?: string): Promise<MenuItem[]> {
+  async getUserMenu(): Promise<MenuItem[]> {
     // Get all menu headers
     const menus = await this.findAllMenus();
     
@@ -45,7 +69,7 @@ export class MenuRepository extends BaseRepository<BHR_MENHEADER> {
       ORDER BY PGR_MENNUMBER, PGR_SEQUENCED
     `;
     
-    const allPrograms = await this.query<BHR_PGRAMCODE>(programsSql);
+    const allPrograms = await executeQuery<BHR_PGRAMCODE>(programsSql);
     
     // If no programs exist, return empty array
     if (allPrograms.length === 0) {
@@ -114,7 +138,7 @@ export class MenuRepository extends BaseRepository<BHR_MENHEADER> {
       ORDER BY PGR_MENNUMBER, PGR_SEQUENCED
     `;
     
-    const programs = await this.query<BHR_PGRAMCODE>(sql);
+    const programs = await executeQuery<BHR_PGRAMCODE>(sql);
     
     return programs.map((program) => ({
       programCode: program.PGR_PGRAMCODE,

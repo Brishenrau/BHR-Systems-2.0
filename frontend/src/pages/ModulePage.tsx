@@ -1,15 +1,17 @@
 import { useParams } from 'react-router-dom';
 import { useModules } from '../hooks/useModules';
-import { useMenu } from '../hooks/useMenu';
+import { menuService } from '../services/menu.service';
 import { useEffect, useState } from 'react';
-import type { BHR_MODULCODE } from '../types/database.types';
+import type { BHR_MODULCODE, MenuItem } from '../types/database.types';
+import type { ApiError } from '../types/api.types';
 
 export const ModulePage = () => {
   const { moduleCode } = useParams<{ moduleCode: string }>();
   const { modules, loading: modulesLoading } = useModules();
-  const { menuItems, loading: menuLoading } = useMenu();
   const [currentModule, setCurrentModule] = useState<BHR_MODULCODE | null>(null);
-  const [modulePrograms, setModulePrograms] = useState<Array<{ programCode: string; programName: string }>>([]);
+  const [moduleMenus, setModuleMenus] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   // Find the module from modules data
   useEffect(() => {
@@ -21,16 +23,29 @@ export const ModulePage = () => {
     }
   }, [modules, modulesLoading, moduleCode]);
   
-  // Find all programs under this module
+  // Fetch menu headers and programs for this module
   useEffect(() => {
-    if (!menuLoading && menuItems.length > 0 && moduleCode) {
-      const allPrograms = menuItems.flatMap(item => item.programs);
-      const programs = allPrograms
-        .filter(p => p.moduleCode === moduleCode)
-        .map(p => ({ programCode: p.programCode, programName: p.programName }));
-      setModulePrograms(programs);
-    }
-  }, [menuItems, menuLoading, moduleCode]);
+    const loadModuleMenus = async () => {
+      if (!moduleCode) return;
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const menus = await menuService.getModuleMenus(moduleCode);
+        setModuleMenus(menus);
+      } catch (err) {
+        const apiError = err as ApiError;
+        setError(apiError.message || 'Failed to load module menus');
+        console.error('Failed to load module menus:', err);
+        setModuleMenus([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadModuleMenus();
+  }, [moduleCode]);
   
   const moduleName = currentModule?.MOD_MODULNAME || moduleCode || 'Module';
 
@@ -47,78 +62,63 @@ export const ModulePage = () => {
           </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
-          <div className="flex items-start">
-            <svg className="w-6 h-6 text-blue-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div>
-              <h3 className="text-lg font-semibold text-blue-900 mb-1">Preview Mode</h3>
-              <p className="text-blue-800">
-                This is a preview page for the <strong>{moduleName}</strong> module. 
-                The actual functionality will be implemented when the backend is connected.
-              </p>
+        {/* Menu Headers and Programs */}
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+            <p className="mt-4 text-gray-600">Loading menus...</p>
+          </div>
+        ) : error ? (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <p className="text-red-800">{error}</p>
+          </div>
+        ) : moduleMenus.length > 0 ? (
+          <div className="mb-6">
+            {/* Grid layout for headers side by side */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {moduleMenus.map((menu) => (
+                <div
+                  key={menu.menuNumber}
+                  className="bg-gradient-to-br from-white to-gray-50 rounded-lg border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                >
+                  {/* Header Section - Distinctive styling */}
+                  <div className="bg-gradient-to-r from-cyan-500 to-teal-500 px-4 py-3 border-b-2 border-cyan-600">
+                    <h3 className="text-lg font-bold text-white">
+                      {menu.menuHeader}
+                    </h3>
+                  </div>
+                  
+                  {/* Programs Section */}
+                  <div className="p-4">
+                    {menu.programs.length > 0 ? (
+                      <ol className="space-y-2">
+                        {menu.programs.map((program, index) => (
+                          <li
+                            key={program.programCode}
+                            className="flex items-start group hover:bg-cyan-50 rounded-md p-2 -ml-2 transition-colors"
+                          >
+                            <span className="text-cyan-600 font-semibold mr-2 mt-0.5 min-w-[1.5rem]">
+                              {index + 1}.
+                            </span>
+                            <span className="text-gray-700 group-hover:text-cyan-700 font-medium flex-1">
+                              {program.programName}
+                            </span>
+                          </li>
+                        ))}
+                      </ol>
+                    ) : (
+                      <p className="text-sm text-gray-400 italic">No programs available</p>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Module Information</h3>
-            <div className="space-y-2">
-              <div>
-                <span className="text-sm font-medium text-gray-600">Module Name:</span>
-                <p className="text-base text-gray-900">{moduleName}</p>
-              </div>
-              <div>
-                <span className="text-sm font-medium text-gray-600">Module Code:</span>
-                <p className="text-base text-gray-900 font-mono">{currentModule?.MOD_MODULCODE || moduleCode}</p>
-              </div>
-              {currentModule?.MOD_MODULSIRI && (
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Sequence:</span>
-                  <p className="text-base text-gray-900 font-mono">{currentModule.MOD_MODULSIRI}</p>
-                </div>
-              )}
-              {modulePrograms.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-gray-300">
-                  <span className="text-sm font-medium text-gray-600">Programs in this module:</span>
-                  <ul className="mt-2 space-y-1">
-                    {modulePrograms.map((program) => (
-                      <li key={program.programCode} className="text-sm text-gray-700">
-                        • {program.programName}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+        ) : (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+            <p className="text-gray-600">No menu items available for this module</p>
           </div>
-
-          <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Features</h3>
-            <ul className="space-y-2 text-gray-700">
-              <li className="flex items-center">
-                <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Data entry and management
-              </li>
-              <li className="flex items-center">
-                <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Reports and analytics
-              </li>
-              <li className="flex items-center">
-                <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Search and filter capabilities
-              </li>
-            </ul>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

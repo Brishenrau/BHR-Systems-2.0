@@ -64,6 +64,35 @@ export class MenuController {
   }
 
   /**
+   * Get menu headers and programs for a specific module
+   */
+  async getModuleMenus(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { moduleCode } = req.params;
+      
+      if (!moduleCode) {
+        res.status(400).json({
+          success: false,
+          message: 'Module code is required',
+        });
+        return;
+      }
+
+      const menus = await menuService.getModuleMenus(moduleCode);
+
+      res.json({
+        success: true,
+        data: menus,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to get module menus',
+      });
+    }
+  }
+
+  /**
    * Get all programs endpoint
    */
   async getAllPrograms(req: Request, res: Response, next: NextFunction): Promise<void> {

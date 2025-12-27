@@ -1,7 +1,7 @@
 import { MenuRepository } from '../repositories/MenuRepository';
 import { AccessRepository } from '../repositories/AccessRepository';
 import { ModuleRepository } from '../repositories/ModuleRepository';
-import type { MenuItem, ProgramItem, BHR_MODULCODE } from '../types/database.types';
+import type { MenuItem, ProgramItem, BHR_MODULCODE, BHR_PGRAMCODE } from '../types/database.types';
 
 export class MenuService {
   private menuRepository = new MenuRepository();
@@ -91,6 +91,46 @@ export class MenuService {
     });
     
     return accessibleModules;
+  }
+
+  /**
+   * Get menu headers and programs for a specific module
+   * Only returns headers that have programs for the given module
+   */
+  async getModuleMenus(moduleCode: string): Promise<MenuItem[]> {
+    // Get all menu headers
+    const allMenus = await this.menuRepository.findAllMenus();
+    
+    // Get all programs for this specific module
+    const modulePrograms = await this.menuRepository.getProgramsByModule(moduleCode);
+    
+    // Group programs by menu number
+    const menuMap = new Map<number, ProgramItem[]>();
+    
+    modulePrograms.forEach((program) => {
+      const programItem: ProgramItem = {
+        programCode: program.PGR_PGRAMCODE,
+        moduleCode: program.PGR_MODULCODE,
+        programName: program.PGR_PGRAMNAME,
+        sequence: program.PGR_SEQUENCED,
+      };
+      
+      if (!menuMap.has(program.PGR_MENNUMBER)) {
+        menuMap.set(program.PGR_MENNUMBER, []);
+      }
+      menuMap.get(program.PGR_MENNUMBER)!.push(programItem);
+    });
+    
+    // Only include menu headers that have programs for this module
+    const moduleMenus: MenuItem[] = allMenus
+      .filter((menu) => menuMap.has(menu.MEN_MENNUMBER))
+      .map((menu) => ({
+        menuNumber: menu.MEN_MENNUMBER,
+        menuHeader: menu.MEN_MENHEADER,
+        programs: menuMap.get(menu.MEN_MENNUMBER)!.sort((a, b) => a.sequence - b.sequence),
+      }));
+    
+    return moduleMenus;
   }
 
   /**

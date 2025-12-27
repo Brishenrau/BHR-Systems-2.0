@@ -23,6 +23,12 @@ export const menuService = {
     return response.data.data;
   },
 
+  // Get menu headers and programs for a specific module
+  async getModuleMenus(moduleCode: string): Promise<MenuItem[]> {
+    const response = await apiClient.get<ApiResponse<MenuItem[]>>(`/menu/module/${moduleCode}/menus`);
+    return response.data.data;
+  },
+
   // Get all programs (for admin)
   async getAllPrograms(): Promise<ProgramItem[]> {
     const response = await apiClient.get<ApiResponse<ProgramItem[]>>('/menu/programs');
