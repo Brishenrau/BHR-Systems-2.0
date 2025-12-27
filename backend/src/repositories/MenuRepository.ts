@@ -32,8 +32,9 @@ export class MenuRepository extends BaseRepository<BHR_MENHEADER> {
     // Trim the module code
     const trimmedModuleCode = moduleCode.trim();
     
-    // Get all programs first, then filter (for debugging and to ensure we get data)
-    const allProgramsSql = `
+    // Use the exact same query pattern as getUserMenu() which we know works
+    // Get all programs first (same query as getUserMenu)
+    const programsSql = `
       SELECT 
         PGR_PGRAMCODE,
         PGR_MODULCODE,
@@ -48,14 +49,12 @@ export class MenuRepository extends BaseRepository<BHR_MENHEADER> {
       ORDER BY PGR_MENNUMBER, PGR_SEQUENCED
     `;
     
-    const allPrograms = await executeQuery<BHR_PGRAMCODE>(allProgramsSql);
+    const allPrograms = await executeQuery<BHR_PGRAMCODE>(programsSql);
     
     // Filter by module code (case-insensitive)
-    const filtered = allPrograms.filter(
+    return allPrograms.filter(
       p => p.PGR_MODULCODE?.trim().toUpperCase() === trimmedModuleCode.toUpperCase()
     );
-    
-    return filtered;
   }
 
   /**

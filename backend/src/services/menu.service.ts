@@ -98,54 +98,21 @@ export class MenuService {
    * Only returns headers that have programs for the given module
    */
   async getModuleMenus(moduleCode: string): Promise<MenuItem[]> {
-    // Get all menu headers
-    const allMenus = await this.menuRepository.findAllMenus();
+    // Use getUserMenu() which we know works, then filter by module code
+    // This ensures we're using the same working query pattern
+    const allMenuItems = await this.menuRepository.getUserMenu();
     
-    // Get all programs for this specific module
-    const modulePrograms = await this.menuRepository.getProgramsByModule(moduleCode);
-    
-    console.log(`[getModuleMenus] Module: ${moduleCode}, Found ${modulePrograms.length} programs`);
-    if (modulePrograms.length > 0) {
-      console.log(`[getModuleMenus] Sample program:`, {
-        code: modulePrograms[0].PGR_PGRAMCODE,
-        module: modulePrograms[0].PGR_MODULCODE,
-        menuNumber: modulePrograms[0].PGR_MENNUMBER,
-        name: modulePrograms[0].PGR_PGRAMNAME
-      });
-    }
-    
-    // Group programs by menu number
-    const menuMap = new Map<number, ProgramItem[]>();
-    
-    modulePrograms.forEach((program) => {
-      const programItem: ProgramItem = {
-        programCode: program.PGR_PGRAMCODE,
-        moduleCode: program.PGR_MODULCODE,
-        programName: program.PGR_PGRAMNAME,
-        sequence: program.PGR_SEQUENCED,
-      };
-      
-      if (!menuMap.has(program.PGR_MENNUMBER)) {
-        menuMap.set(program.PGR_MENNUMBER, []);
-      }
-      menuMap.get(program.PGR_MENNUMBER)!.push(programItem);
-    });
-    
-    console.log(`[getModuleMenus] Menu numbers with programs:`, Array.from(menuMap.keys()));
-    console.log(`[getModuleMenus] Available menu headers:`, allMenus.map(m => ({ number: m.MEN_MENNUMBER, header: m.MEN_MENHEADER })));
-    
-    // Only include menu headers that have programs for this module
-    const moduleMenus: MenuItem[] = allMenus
-      .filter((menu) => menuMap.has(menu.MEN_MENNUMBER))
+    // Filter to only include programs for this module
+    const moduleMenuItems: MenuItem[] = allMenuItems
       .map((menu) => ({
-        menuNumber: menu.MEN_MENNUMBER,
-        menuHeader: menu.MEN_MENHEADER,
-        programs: menuMap.get(menu.MEN_MENNUMBER)!.sort((a, b) => a.sequence - b.sequence),
-      }));
+        ...menu,
+        programs: menu.programs.filter(
+          (program) => program.moduleCode.trim().toUpperCase() === moduleCode.trim().toUpperCase()
+        ),
+      }))
+      .filter((menu) => menu.programs.length > 0); // Only keep menus with programs
     
-    console.log(`[getModuleMenus] Returning ${moduleMenus.length} menu items`);
-    
-    return moduleMenus;
+    return moduleMenuItems;
   }
 
   /**
