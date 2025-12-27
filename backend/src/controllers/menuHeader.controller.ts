@@ -70,5 +70,32 @@ export class MenuHeaderController {
       });
     }
   }
+
+  async deleteMenuHeader(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { menuNumber } = req.params;
+      
+      if (!menuNumber) {
+        res.status(400).json({
+          success: false,
+          message: 'Menu number is required',
+        });
+        return;
+      }
+
+      await menuHeaderService.deleteMenuHeader(Number(menuNumber));
+
+      res.json({
+        success: true,
+        message: 'Menu header deleted successfully',
+      });
+    } catch (error: any) {
+      console.error('Error deleting menu header:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Failed to delete menu header',
+      });
+    }
+  }
 }
 

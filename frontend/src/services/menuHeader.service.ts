@@ -17,5 +17,9 @@ export const menuHeaderService = {
     const response = await apiClient.get<ApiResponse<BHR_MENHEADER[]>>('/menu-headers');
     return response.data.data;
   },
+
+  async deleteMenuHeader(menuNumber: number): Promise<void> {
+    await apiClient.delete<ApiResponse<void>>(`/menu-headers/${menuNumber}`);
+  },
 };
 

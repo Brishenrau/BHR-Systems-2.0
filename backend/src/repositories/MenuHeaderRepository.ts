@@ -91,5 +91,37 @@ export class MenuHeaderRepository extends BaseRepository<BHR_MENHEADER> {
     
     return await this.query<BHR_MENHEADER>(sql);
   }
+
+  /**
+   * Check if menu number already exists
+   */
+  async menuNumberExists(menuNumber: number): Promise<boolean> {
+    const existing = await this.findByMenuNumber(menuNumber);
+    return existing !== null;
+  }
+
+  /**
+   * Check if menu header name already exists
+   */
+  async menuHeaderNameExists(menuHeader: string): Promise<boolean> {
+    const sql = `
+      SELECT COUNT(*) AS CNT
+      FROM ${this.getFullTableName()}
+      WHERE UPPER(TRIM(MEN_MENHEADER)) = UPPER(TRIM(:menuHeader))
+    `;
+    const result = await this.queryOne<{ CNT: number }>(sql, { menuHeader });
+    return (result?.CNT || 0) > 0;
+  }
+
+  /**
+   * Delete menu header by menu number
+   */
+  async delete(menuNumber: number): Promise<void> {
+    const sql = `
+      DELETE FROM ${this.getFullTableName()}
+      WHERE MEN_MENNUMBER = :menuNumber
+    `;
+    await this.execute(sql, { menuNumber });
+  }
 }
 

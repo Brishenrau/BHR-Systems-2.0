@@ -13,23 +13,25 @@ export const MenuHeaderPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string>('');
   const [menuHeaders, setMenuHeaders] = useState<BHR_MENHEADER[]>([]);
   const [loadingMenuHeaders, setLoadingMenuHeaders] = useState(true);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  // Fetch all menu headers on component mount and after creation
+  // Fetch all menu headers on component mount and after creation/deletion
+  const loadMenuHeaders = async () => {
+    try {
+      setLoadingMenuHeaders(true);
+      const allMenuHeaders = await menuHeaderService.getAllMenuHeaders();
+      setMenuHeaders(allMenuHeaders);
+    } catch (err) {
+      console.error('Failed to load menu headers:', err);
+    } finally {
+      setLoadingMenuHeaders(false);
+    }
+  };
+
   useEffect(() => {
-    const loadMenuHeaders = async () => {
-      try {
-        setLoadingMenuHeaders(true);
-        const allMenuHeaders = await menuHeaderService.getAllMenuHeaders();
-        setMenuHeaders(allMenuHeaders);
-      } catch (err) {
-        console.error('Failed to load menu headers:', err);
-      } finally {
-        setLoadingMenuHeaders(false);
-      }
-    };
-
     loadMenuHeaders();
   }, [success]);
 
@@ -54,14 +56,19 @@ export const MenuHeaderPage = () => {
       });
 
       setSuccess(true);
+      setSuccessMessage('Menu header created successfully!');
       setFormData({
         MEN_MENNUMBER: '',
         MEN_MENHEADER: '',
       });
 
+      // Dispatch custom event to notify other pages
+      window.dispatchEvent(new Event('menuHeadersUpdated'));
+
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccess(false);
+        setSuccessMessage('');
       }, 3000);
     } catch (err) {
       const apiError = err as ApiError;
@@ -69,6 +76,38 @@ export const MenuHeaderPage = () => {
       console.error('Failed to create menu header:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (menuNumber: number) => {
+    if (!window.confirm(`Are you sure you want to delete menu header "${menuHeaders.find(m => m.MEN_MENNUMBER === menuNumber)?.MEN_MENHEADER}"?`)) {
+      return;
+    }
+
+    try {
+      setDeletingId(menuNumber);
+      await menuHeaderService.deleteMenuHeader(menuNumber);
+      setSuccess(true);
+      setSuccessMessage('Menu header deleted successfully!');
+      setError(null);
+      
+      // Reload menu headers
+      await loadMenuHeaders();
+      
+      // Dispatch custom event to notify other pages
+      window.dispatchEvent(new Event('menuHeadersUpdated'));
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => {
+        setSuccess(false);
+        setSuccessMessage('');
+      }, 3000);
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Failed to delete menu header');
+      console.error('Failed to delete menu header:', err);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -86,7 +125,7 @@ export const MenuHeaderPage = () => {
               <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              <p className="text-green-800 font-medium">Menu header created successfully!</p>
+              <p className="text-green-800 font-medium">{successMessage || 'Operation completed successfully!'}</p>
             </div>
           </div>
         )}
@@ -193,6 +232,9 @@ export const MenuHeaderPage = () => {
                     <th className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
                       Created Date
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -215,6 +257,25 @@ export const MenuHeaderPage = () => {
                               day: 'numeric'
                             })
                           : '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <button
+                          onClick={() => handleDelete(menuHeader.MEN_MENNUMBER)}
+                          disabled={deletingId === menuHeader.MEN_MENNUMBER}
+                          className="text-red-600 hover:text-red-800 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {deletingId === menuHeader.MEN_MENNUMBER ? (
+                            <span className="flex items-center">
+                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Deleting...
+                            </span>
+                          ) : (
+                            'Delete'
+                          )}
+                        </button>
                       </td>
                     </tr>
                   ))}

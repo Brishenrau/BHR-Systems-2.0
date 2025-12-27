@@ -28,7 +28,7 @@ export const ProgramCodePage = () => {
   const [modules, setModules] = useState<BHR_MODULCODE[]>([]);
   const [menuHeaders, setMenuHeaders] = useState<MenuHeader[]>([]);
 
-  // Fetch modules and menu headers on component mount
+  // Fetch modules and menu headers on component mount and when page becomes visible
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -51,6 +51,26 @@ export const ProgramCodePage = () => {
     };
 
     loadData();
+
+    // Listen for custom event when menu headers are updated
+    const handleMenuHeadersUpdate = () => {
+      loadData();
+    };
+
+    window.addEventListener('menuHeadersUpdated', handleMenuHeadersUpdate);
+
+    // Also refetch when page becomes visible (user navigates back)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadData();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('menuHeadersUpdated', handleMenuHeadersUpdate);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // Fetch all programs on component mount and after creation
