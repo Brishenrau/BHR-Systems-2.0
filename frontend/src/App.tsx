@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
+import { ModulePage } from './pages/ModulePage';
 import { NotFound } from './pages/NotFound';
 import { Layout } from './components/layout/Layout';
 import { ProtectedRoute } from './components/features/auth/ProtectedRoute';
@@ -31,7 +32,8 @@ function App() {
             }
           >
             <Route index element={<Dashboard />} />
-            {/* Add more routes here as you build features */}
+            <Route path="module/:moduleCode" element={<ModulePage />} />
+            <Route path="program/:programCode" element={<ModulePage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

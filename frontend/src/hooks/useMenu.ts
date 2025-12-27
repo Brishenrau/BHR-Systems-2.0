@@ -20,6 +20,8 @@ export const useMenu = () => {
         const apiError = err as ApiError;
         setError(apiError.message || 'Failed to load menu');
         console.error('Failed to load menu:', err);
+        // Even on error, set empty array so UI doesn't break
+        setMenuItems([]);
       } finally {
         setLoading(false);
       }
@@ -30,4 +32,3 @@ export const useMenu = () => {
 
   return { menuItems, loading, error };
 };
-
