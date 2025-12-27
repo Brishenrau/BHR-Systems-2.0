@@ -4,6 +4,7 @@ import { useMenu } from '../../hooks/useMenu';
 export const Menu = () => {
   const { menuItems, loading, error } = useMenu();
   const location = useLocation();
+  const isHome = location.pathname === '/';
 
   if (loading) {
     return (
@@ -25,35 +26,65 @@ export const Menu = () => {
     );
   }
 
-  if (menuItems.length === 0) {
-    return (
-      <div className="text-sm text-gray-400 p-4">
-        <p>No menu items available</p>
-      </div>
-    );
-  }
-
   // Flatten all menus - each menu stands alone
-  const allPrograms = menuItems.flatMap(item => item.programs);
+  const allPrograms = menuItems.length > 0 ? menuItems.flatMap(item => item.programs) : [];
 
   return (
     <div className="space-y-1">
-      <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-        Modules
-      </div>
-      {allPrograms.map((program) => (
-        <Link
-          key={program.programCode}
-          to={`/module/${program.programCode}`}
-          className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-            location.pathname === `/module/${program.programCode}`
-              ? 'bg-orange-500 text-white'
-              : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-          }`}
+      {/* HOME Link */}
+      <Link
+        to="/"
+        className={`flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-colors mb-2 ${
+          isHome
+            ? 'bg-cyan-500 text-white'
+            : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+        }`}
+      >
+        <svg 
+          className="w-5 h-5 mr-3" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
         >
-          {program.programName}
-        </Link>
-      ))}
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" 
+          />
+        </svg>
+        HOME
+      </Link>
+
+      {/* Separator Line */}
+      {allPrograms.length > 0 && (
+        <div className="my-2 border-t border-gray-700"></div>
+      )}
+
+      {/* Modules List */}
+      {allPrograms.length > 0 && (
+        <>
+          {allPrograms.map((program) => (
+            <Link
+              key={program.programCode}
+              to={`/module/${program.programCode}`}
+              className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === `/module/${program.programCode}`
+                  ? 'bg-cyan-500 text-white'
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+              }`}
+            >
+              {program.programName}
+            </Link>
+          ))}
+        </>
+      )}
+
+      {allPrograms.length === 0 && !loading && !error && (
+        <div className="text-sm text-gray-400 p-4">
+          <p>No menu items available</p>
+        </div>
+      )}
     </div>
   );
 };

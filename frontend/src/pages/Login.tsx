@@ -109,7 +109,7 @@ export const Login = () => {
                 <label className="block text-sm font-medium text-white">Password</label>
                 <button
                   type="button"
-                  className="text-sm text-orange-400 hover:text-orange-300 focus:outline-none"
+                  className="text-sm text-cyan-400 hover:text-cyan-300 focus:outline-none"
                 >
                   Forgot password?
                 </button>
@@ -141,7 +141,7 @@ export const Login = () => {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 text-orange-500 focus:ring-orange-500 border-gray-600 rounded bg-gray-700"
+                className="h-4 w-4 text-cyan-500 focus:ring-cyan-500 border-gray-600 rounded bg-gray-700"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300">
                 Remember me for 30 days
@@ -205,7 +205,7 @@ export const Login = () => {
             <span>Don't have an account? </span>
             <button
               type="button"
-              className="text-orange-400 hover:text-orange-300 focus:outline-none font-medium"
+              className="text-cyan-400 hover:text-cyan-300 focus:outline-none font-medium"
             >
               Create one now
             </button>

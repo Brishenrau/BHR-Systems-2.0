@@ -1,11 +1,12 @@
 import { Menu } from './Menu';
 import { useAuthStore } from '../../store/authStore';
+import { ProfilePicture } from '../common/ProfilePicture';
 
 export const Sidebar = () => {
   const { user } = useAuthStore();
 
   return (
-    <aside className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-xl h-screen fixed left-0 top-0 flex flex-col">
+    <aside className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-xl h-screen fixed left-0 top-0 flex flex-col z-50">
       {/* Sidebar Header */}
       <div className="p-6 border-b border-gray-700 flex-shrink-0">
         <div className="flex items-center space-x-3 mb-4">
@@ -21,9 +22,20 @@ export const Sidebar = () => {
         </div>
         {user && (
           <div className="mt-4 pt-4 border-t border-gray-700">
-            <p className="text-xs text-gray-400 mb-1">Logged in as</p>
-            <p className="text-sm font-semibold text-white">{user.USE_PAYNUMBER}</p>
-            <p className="text-xs text-gray-400 mt-1">Level: {user.USE_USERLEVEL}</p>
+            <div className="flex items-center space-x-3 mb-3">
+              {/* Profile Picture in Sidebar */}
+              <ProfilePicture
+                name={user.USE_PAYNUMBER}
+                size="lg"
+                showStatus
+                status="online"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-400 mb-1">Logged in as</p>
+                <p className="text-sm font-semibold text-white truncate">{user.USE_PAYNUMBER}</p>
+                <p className="text-xs text-gray-400 mt-0.5">Level: {user.USE_USERLEVEL}</p>
+              </div>
+            </div>
           </div>
         )}
       </div>

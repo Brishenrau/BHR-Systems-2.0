@@ -50,7 +50,7 @@ export const Input: React.FC<InputProps> = ({
             ${leftIcon ? 'pl-10' : 'pl-3'}
             ${rightIcon || showPasswordToggle ? 'pr-10' : 'pr-3'}
             bg-gray-700/50 border border-gray-600 text-white placeholder-gray-400
-            focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500
+            focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500
             transition-all
             ${error ? 'border-red-500 focus:ring-red-500' : ''}
             ${className}
