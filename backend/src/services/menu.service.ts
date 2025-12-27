@@ -1,10 +1,32 @@
 import { MenuRepository } from '../repositories/MenuRepository';
 import { AccessRepository } from '../repositories/AccessRepository';
+import { ModuleRepository } from '../repositories/ModuleRepository';
 import type { MenuItem, ProgramItem } from '../types/database.types';
 
 export class MenuService {
   private menuRepository = new MenuRepository();
   private accessRepository = new AccessRepository();
+  private moduleRepository = new ModuleRepository();
+
+  /**
+   * Check if user has access to a module based on access string
+   * @param moduleSequence - MOD_MODULSIRI (1-based)
+   * @param accessString - ACC_MODACCESS (60 char string)
+   * @returns true if user has access (Y or T at position)
+   */
+  private hasModuleAccess(moduleSequence: number, accessString: string): boolean {
+    // Access string is 0-indexed, module sequence is 1-based
+    // Position in access string = moduleSequence - 1
+    const position = moduleSequence - 1;
+    
+    if (position < 0 || position >= accessString.length) {
+      return false; // Out of bounds, no access
+    }
+    
+    const accessChar = accessString.charAt(position).toUpperCase();
+    // Y or T means access granted
+    return accessChar === 'Y' || accessChar === 'T';
+  }
 
   /**
    * Get menu structure for current user
@@ -18,10 +40,37 @@ export class MenuService {
     const access = await this.accessRepository.findByPayNumber(payNumber);
     const accessModules = access?.ACC_MODACCESS || 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT';
     
-    // Filter menus based on access (if needed)
-    // For now, return all menus
-    // You can implement filtering logic based on ACC_MODACCESS string
-    return allMenus;
+    // Get all active modules to map module codes to sequences
+    const allModules = await this.moduleRepository.findAllActive();
+    const moduleMap = new Map<string, number>(); // moduleCode -> sequence
+    
+    allModules.forEach((module) => {
+      moduleMap.set(module.MOD_MODULCODE, module.MOD_MODULSIRI);
+    });
+    
+    // Filter programs based on module access
+    const filteredMenus: MenuItem[] = allMenus.map((menu) => {
+      const filteredPrograms = menu.programs.filter((program) => {
+        // Get module sequence for this program's module code
+        const moduleSequence = moduleMap.get(program.moduleCode);
+        
+        if (!moduleSequence) {
+          // Module not found, deny access by default
+          return false;
+        }
+        
+        // Check if user has access to this module
+        return this.hasModuleAccess(moduleSequence, accessModules);
+      });
+      
+      // Only include menu if it has accessible programs
+      return {
+        ...menu,
+        programs: filteredPrograms,
+      };
+    }).filter((menu) => menu.programs.length > 0); // Remove empty menus
+    
+    return filteredMenus;
   }
 
   /**

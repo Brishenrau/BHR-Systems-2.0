@@ -1,17 +1,35 @@
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { useMenu } from '../hooks/useMenu';
+
+// Icon mapping for common modules
+const moduleIcons: Record<string, { icon: string; color: string }> = {
+  'GAJI': { icon: '💵', color: 'bg-teal-500' },
+  'PEMBAYARAN': { icon: '💰', color: 'bg-cyan-500' },
+  'PERAKAUNAN': { icon: '📊', color: 'bg-blue-500' },
+  'PERSONEL': { icon: '👥', color: 'bg-emerald-500' },
+  'PERSONELIA': { icon: '👥', color: 'bg-emerald-500' },
+  'STOK': { icon: '📦', color: 'bg-sky-500' },
+  'PELESENAN': { icon: '📋', color: 'bg-cyan-400' },
+  'BELANJAWAN': { icon: '📑', color: 'bg-purple-500' },
+  'PINJAMAN': { icon: '💳', color: 'bg-orange-500' },
+  'TUNTUTAN': { icon: '📝', color: 'bg-pink-500' },
+};
+
+// Default icon/color for modules not in the mapping
+const defaultModule = { icon: '📄', color: 'bg-gray-500' };
 
 export const Dashboard = () => {
   const { user } = useAuthStore();
+  const { menuItems, loading: menuLoading } = useMenu();
 
-  const quickAccessModules = [
-    { name: 'PEMBAYARAN', code: 'PEMBAYARAN', icon: '💰', color: 'bg-cyan-500' },
-    { name: 'GAJI', code: 'GAJI', icon: '💵', color: 'bg-teal-500' },
-    { name: 'PERAKAUNAN', code: 'PERAKAUNAN', icon: '📊', color: 'bg-blue-500' },
-    { name: 'PERSONEL', code: 'PERSONEL', icon: '👥', color: 'bg-emerald-500' },
-    { name: 'STOK', code: 'STOK', icon: '📦', color: 'bg-sky-500' },
-    { name: 'PELESENAN', code: 'PELESENAN', icon: '📋', color: 'bg-cyan-400' },
-  ];
+  // Get all accessible programs from menu items
+  const accessiblePrograms = menuItems.flatMap(item => item.programs);
+
+  // Get icon and color for a program
+  const getModuleDisplay = (programName: string) => {
+    return moduleIcons[programName] || defaultModule;
+  };
 
   const currentDate = new Date();
   const formattedDate = currentDate.toLocaleDateString('en-MY', {
@@ -107,25 +125,36 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Quick Access Modules */}
+      {/* Quick Access Modules - Only shows modules user has access to */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Access</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {quickAccessModules.map((module) => (
-            <Link
-              key={module.code}
-              to={`/module/${module.code}`}
-              className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-cyan-400 hover:bg-cyan-50 transition-all group"
-            >
-              <div className={`w-12 h-12 ${module.color} rounded-full flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform`}>
-                {module.icon}
-              </div>
-              <p className="text-sm font-medium text-gray-700 text-center group-hover:text-cyan-600">
-                {module.name}
-              </p>
-            </Link>
-          ))}
-        </div>
+        {menuLoading ? (
+          <div className="text-center py-8 text-gray-500">Loading modules...</div>
+        ) : accessiblePrograms.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {accessiblePrograms.map((program) => {
+              const display = getModuleDisplay(program.programName);
+              return (
+                <Link
+                  key={program.programCode}
+                  to={`/module/${program.programCode}`}
+                  className="flex flex-col items-center p-4 border border-gray-200 rounded-lg hover:border-cyan-400 hover:bg-cyan-50 transition-all group"
+                >
+                  <div className={`w-12 h-12 ${display.color} rounded-full flex items-center justify-center text-2xl mb-3 group-hover:scale-110 transition-transform`}>
+                    {display.icon}
+                  </div>
+                  <p className="text-sm font-medium text-gray-700 text-center group-hover:text-cyan-600">
+                    {program.programName}
+                  </p>
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            No modules available. Please contact your administrator.
+          </div>
+        )}
       </div>
 
       {/* System Information & Recent Activity */}

@@ -48,34 +48,15 @@ const allMenus: ProgramItem[] = [
 
 export const menuService = {
   // Get menu structure for current user (reads from BHR_MENHEADER & BHR_PGRAMCODE)
+  // Backend filters based on user's access modules
   async getUserMenu(): Promise<MenuItem[]> {
-    // Development mode: Return flat list of all menus
-    const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true' || !import.meta.env.VITE_API_BASE_URL;
-    
-    if (DEV_MODE) {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      // Return flat structure - each menu is standalone
-      return allMenus.map((menu, index) => ({
-        menuNumber: index + 1,
-        menuHeader: menu.programName,
-        programs: [menu],
-      }));
-    }
-    
-    // Production: Call actual API (backend wraps response in { success, data, message })
+    // Call actual API (backend wraps response in { success, data, message })
     const response = await apiClient.get<ApiResponse<MenuItem[]>>('/menu/user-menu');
     return response.data.data;
   },
 
   // Get all programs (for admin)
   async getAllPrograms(): Promise<ProgramItem[]> {
-    const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true' || !import.meta.env.VITE_API_BASE_URL;
-    
-    if (DEV_MODE) {
-      return allMenus;
-    }
-    
     const response = await apiClient.get<ApiResponse<ProgramItem[]>>('/menu/programs');
     return response.data.data;
   },
