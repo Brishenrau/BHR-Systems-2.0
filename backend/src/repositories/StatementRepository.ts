@@ -115,6 +115,50 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
     const results = await this.query(sql, binds) as { STA_NOMBAKAUN: number }[];
     return results.map(r => r.STA_NOMBAKAUN);
   }
+
+  /**
+   * Get property and owner details for an account number
+   * Note: Adjust table and column names based on your actual schema
+   */
+  async getPropertyDetails(nomBakaun: number): Promise<any> {
+    // This query assumes a property table exists with owner and property information
+    // Adjust based on your actual schema structure
+    const sql = `
+      SELECT 
+        p.PEG_NOMBAKAUN as accountNumber,
+        p.PEG_ALAMATHRT as propertyAddress,
+        p.PEG_NOMBORLOT as lotNumber,
+        p.PEG_XCORDINAT as xCoordinate,
+        p.PEG_YCORDINAT as yCoordinate,
+        p.PEG_PERATUSAN as percentage,
+        p.PEG_NILAIBARU as newValue,
+        p.PEG_KADARTHUN as ratePerYear,
+        p.PEG_CUKAIBARU as newTax,
+        -- Add owner name and other fields from the appropriate table
+        -- This is a placeholder - adjust based on your schema
+        NULL as ownerName,
+        NULL as laneCode,
+        NULL as roadCode,
+        NULL as mailingAddress,
+        NULL as ownerType,
+        NULL as race,
+        NULL as ctaCalculation
+      FROM STKN.TKN_PEGANGAN p
+      WHERE p.PEG_NOMBAKAUN = :nomBakaun
+    `;
+    
+    const result = await this.queryOne(sql, { nomBakaun });
+    
+    if (result) {
+      // Format CTA calculation if values are available
+      if (result.newValue && result.ratePerYear && result.percentage) {
+        const cta = (result.newValue * (result.ratePerYear / 100) * (result.percentage / 100)).toFixed(2);
+        result.ctaCalculation = `${result.newValue.toFixed(2)} X ${result.ratePerYear.toFixed(4)}% X ${result.percentage.toFixed(2)}% = ${cta}`;
+      }
+    }
+    
+    return result;
+  }
 }
 
 export class BakhutangRepository extends BaseRepository<TKN_BAKHUTANG> {

@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { statementService } from '../services/statement.service';
+import { useSidebarStore } from '../store/sidebarStore';
 import type { ApiError } from '../types/api.types';
 import type { StatementResponse, TKN_STATEMENT } from '../types/database.types';
 
 type TabType = 'statement' | 'bill';
 
 export const StatementPage = () => {
+  const { setCollapsed } = useSidebarStore();
   const [accountNumber, setAccountNumber] = useState<string>('');
   const [address, setAddress] = useState<string>('');
   const [ownerName, setOwnerName] = useState<string>('');
@@ -14,6 +16,15 @@ export const StatementPage = () => {
   const [data, setData] = useState<StatementResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [propertyDetails, setPropertyDetails] = useState<any>(null);
+
+  // Collapse sidebar when component mounts, restore when unmounts
+  useEffect(() => {
+    setCollapsed(true);
+    return () => {
+      setCollapsed(false);
+    };
+  }, [setCollapsed]);
 
   // Format date with time for display (dd/mm/yyyy hh24:mi format)
   const formatDate = (date: Date | string | null | undefined): string => {
@@ -99,8 +110,12 @@ export const StatementPage = () => {
         nomBakaun = accountNumbers[0];
       }
 
-      const result = await statementService.getStatementByAccount(nomBakaun);
+      const [result, propertyInfo] = await Promise.all([
+        statementService.getStatementByAccount(nomBakaun),
+        statementService.getPropertyDetails(nomBakaun).catch(() => null), // Fetch property details, ignore errors
+      ]);
       setData(result);
+      setPropertyDetails(propertyInfo);
       // Update account number field with the found account
       setAccountNumber(nomBakaun.toString());
     } catch (err) {
@@ -231,6 +246,74 @@ export const StatementPage = () => {
           </div>
         )}
 
+        {/* Property and Owner Details */}
+        {data && propertyDetails && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 uppercase">NOMBOR AKAUN</label>
+                <p className="text-sm font-bold text-gray-900 mt-1">
+                  {propertyDetails.accountNumber || accountNumber}
+                </p>
+              </div>
+              {propertyDetails.laneCode && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase">KOD LORONG</label>
+                  <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.laneCode}</p>
+                </div>
+              )}
+              {propertyDetails.roadCode && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase">KOD JALAN</label>
+                  <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.roadCode}</p>
+                </div>
+              )}
+              {propertyDetails.ownerName && (
+                <div className="md:col-span-2 lg:col-span-3">
+                  <label className="text-xs font-semibold text-gray-600 uppercase">NAMA PEMILIK</label>
+                  <p className="text-sm font-bold text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1 inline-block">
+                    {propertyDetails.ownerName}
+                  </p>
+                </div>
+              )}
+              {propertyDetails.propertyAddress && (
+                <div className="md:col-span-2 lg:col-span-3">
+                  <label className="text-xs font-semibold text-gray-600 uppercase">ALAMAT HARTA</label>
+                  <p className="text-sm font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1 inline-block">
+                    {propertyDetails.propertyAddress}
+                  </p>
+                </div>
+              )}
+              {propertyDetails.mailingAddress && (
+                <div className="md:col-span-2 lg:col-span-3">
+                  <label className="text-xs font-semibold text-gray-600 uppercase">ALAMAT SURAT-MENYURAT</label>
+                  <p className="text-sm font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1 inline-block">
+                    {propertyDetails.mailingAddress}
+                  </p>
+                </div>
+              )}
+              {propertyDetails.ownerType && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase">JENIS PEMILIK</label>
+                  <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.ownerType}</p>
+                </div>
+              )}
+              {propertyDetails.race && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase">BANGSA</label>
+                  <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.race}</p>
+                </div>
+              )}
+              {propertyDetails.ctaCalculation && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 uppercase">KIRAAN CTA</label>
+                  <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.ctaCalculation}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Tabs */}
         {data && (
           <div className="mb-6">
@@ -268,37 +351,37 @@ export const StatementPage = () => {
               <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       TARIKH KUTIPAN
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       TARIKH KEMASKINI
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       JENIS
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       NO RESIT/BIL/LLN
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       NO KELOMPOK/DOK
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       KOD TRANSAKSI
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       KETERANGAN TRANSAKSI
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-center text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       D/K
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-right text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       DEBIT
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-right text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       KREDIT
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-1.5 text-right text-[10px] font-medium text-gray-700 uppercase tracking-wider">
                       BAKI
                     </th>
                   </tr>
@@ -310,37 +393,37 @@ export const StatementPage = () => {
                     
                     return (
                       <tr key={`${stmt.STA_NOMBAKAUN}-${stmt.STA_NOMSERIAL}`} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-900 border-r border-gray-200">
                           {formatDate(stmt.STA_TARIKHTRX)}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-900 border-r border-gray-200">
                           {formatDate(stmt.STA_TARIKHPOS)}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-900 border-r border-gray-200">
                           {stmt.STA_TRANSTYPE}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-900 border-r border-gray-200">
                           {stmt.STA_REFERENCE}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-900 border-r border-gray-200">
                           {stmt.STA_NDOCUMENT || '-'}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-900 border-r border-gray-200">
                           {stmt.STA_TRANSCODE}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 text-xs text-gray-900 border-r border-gray-200">
                           {stmt.TRA_TRANSNAME || stmt.STA_TRANSCODE}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-center text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-center text-gray-900 border-r border-gray-200">
                           {stmt.STA_TRANSDRCR}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-right text-gray-900 border-r border-gray-200">
                           {stmt.STA_TRANSDRCR === 'D' ? formatCurrency(stmt.STA_AMOUNTTRX) : '-'}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-right text-gray-900 border-r border-gray-200">
                           {stmt.STA_TRANSDRCR === 'K' ? formatCurrency(stmt.STA_AMOUNTTRX) : '-'}
                         </td>
-                        <td className={`px-4 py-3 whitespace-nowrap text-sm text-right border-r border-gray-200 ${
+                        <td className={`px-2 py-1.5 whitespace-nowrap text-xs text-right border-r border-gray-200 ${
                           isNegative ? 'text-red-600 font-semibold' : 'text-gray-900'
                         }`}>
                           {isNegative ? `<${formatCurrency(Math.abs(balance))}>` : formatCurrency(balance)}
@@ -351,16 +434,16 @@ export const StatementPage = () => {
                 </tbody>
                 <tfoot className="bg-gray-50 font-semibold">
                   <tr>
-                    <td colSpan={8} className="px-4 py-3 text-right text-sm text-gray-700">
+                    <td colSpan={8} className="px-2 py-1.5 text-right text-xs text-gray-700">
                       JUMLAH
                     </td>
-                    <td className="px-4 py-3 text-right text-sm text-gray-900 border-r border-gray-200">
+                    <td className="px-2 py-1.5 text-right text-xs text-gray-900 border-r border-gray-200">
                       {formatCurrency(data.totals.totalDebit)}
                     </td>
-                    <td className="px-4 py-3 text-right text-sm text-gray-900 border-r border-gray-200">
+                    <td className="px-2 py-1.5 text-right text-xs text-gray-900 border-r border-gray-200">
                       {formatCurrency(data.totals.totalCredit)}
                     </td>
-                    <td className={`px-4 py-3 text-right text-sm border-r border-gray-200 ${
+                    <td className={`px-2 py-1.5 text-right text-xs border-r border-gray-200 ${
                       data.totals.totalBalance < 0 ? 'text-red-600' : 'text-gray-900'
                     }`}>
                       {data.totals.totalBalance < 0 
@@ -382,22 +465,22 @@ export const StatementPage = () => {
               <table className="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-left text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       KOD DAN KETERANGAN TRANSAKSI
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-right text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       AMAUN SEMASA
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-right text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       TGK SEMASA
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-right text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       TUNGGAKAN
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
+                    <th className="px-2 py-1.5 text-right text-[10px] font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">
                       BAYARAN LEBIHAN
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-2 py-1.5 text-right text-[10px] font-medium text-gray-700 uppercase tracking-wider">
                       JUMLAH
                     </th>
                   </tr>
@@ -409,22 +492,22 @@ export const StatementPage = () => {
                     
                     return (
                       <tr key={`${bak.BAK_NOMBAKAUN}-${bak.BAK_NOMSERIAL}-${bak.BAK_TRANSCODE}`} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 text-xs text-gray-900 border-r border-gray-200">
                           {bak.BAK_TRANSCODE} {bak.TRA_TRANSNAME || ''}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-right text-gray-900 border-r border-gray-200">
                           {formatCurrency(bak.BAK_AMAUNCURR)}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-right text-gray-900 border-r border-gray-200">
                           {formatCurrency(bak.BAK_AMAUNTHUN)}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-right text-gray-900 border-r border-gray-200">
                           {formatCurrency(bak.BAK_AMAUNTNGK)}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-right text-gray-900 border-r border-gray-200">
+                        <td className="px-2 py-1.5 whitespace-nowrap text-xs text-right text-gray-900 border-r border-gray-200">
                           {formatCurrency(bak.BAK_AMAUNLBIH)}
                         </td>
-                        <td className={`px-4 py-3 whitespace-nowrap text-sm text-right border-r border-gray-200 ${
+                        <td className={`px-2 py-1.5 whitespace-nowrap text-xs text-right border-r border-gray-200 ${
                           isNegative ? 'text-red-600 font-semibold' : 'text-gray-900'
                         }`}>
                           {isNegative 
@@ -438,22 +521,22 @@ export const StatementPage = () => {
                 </tbody>
                 <tfoot className="bg-gray-50 font-semibold">
                   <tr>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-2 py-1.5 text-xs text-gray-700">
                       JUMLAH BESAR
                     </td>
-                    <td className="px-4 py-3 text-right text-sm text-gray-900 border-r border-gray-200">
+                    <td className="px-2 py-1.5 text-right text-xs text-gray-900 border-r border-gray-200">
                       {formatCurrency(data.bakhutang.reduce((sum, bak) => sum + bak.BAK_AMAUNCURR, 0))}
                     </td>
-                    <td className="px-4 py-3 text-right text-sm text-gray-900 border-r border-gray-200">
+                    <td className="px-2 py-1.5 text-right text-xs text-gray-900 border-r border-gray-200">
                       {formatCurrency(data.bakhutang.reduce((sum, bak) => sum + bak.BAK_AMAUNTHUN, 0))}
                     </td>
-                    <td className="px-4 py-3 text-right text-sm text-gray-900 border-r border-gray-200">
+                    <td className="px-2 py-1.5 text-right text-xs text-gray-900 border-r border-gray-200">
                       {formatCurrency(data.bakhutang.reduce((sum, bak) => sum + bak.BAK_AMAUNTNGK, 0))}
                     </td>
-                    <td className="px-4 py-3 text-right text-sm text-gray-900 border-r border-gray-200">
+                    <td className="px-2 py-1.5 text-right text-xs text-gray-900 border-r border-gray-200">
                       {formatCurrency(data.bakhutang.reduce((sum, bak) => sum + bak.BAK_AMAUNLBIH, 0))}
                     </td>
-                    <td className={`px-4 py-3 text-right text-sm border-r border-gray-200 ${
+                    <td className={`px-2 py-1.5 text-right text-xs border-r border-gray-200 ${
                       data.totals.totalBalance < 0 ? 'text-red-600' : 'text-gray-900'
                     }`}>
                       {data.totals.totalBalance < 0 

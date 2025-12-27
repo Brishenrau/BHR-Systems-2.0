@@ -94,5 +94,14 @@ export class StatementService {
     // Assuming there's a property/pegangan table with address and owner info
     return await this.statementRepository.searchAccountNumbers(searchCriteria);
   }
+
+  /**
+   * Get property and owner details for an account number
+   */
+  async getPropertyDetails(nomBakaun: number): Promise<any> {
+    // This will need to be adjusted based on your actual schema
+    // Assuming there's a property/pegangan table with property and owner information
+    return await this.statementRepository.getPropertyDetails(nomBakaun);
+  }
 }
 

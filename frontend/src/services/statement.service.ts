@@ -35,5 +35,15 @@ export const statementService = {
     );
     return response.data.data;
   },
+
+  /**
+   * Get property and owner details by account number
+   */
+  async getPropertyDetails(nomBakaun: number): Promise<any> {
+    const response = await apiClient.get<ApiResponse<any>>(
+      `/statements/${nomBakaun}/property`
+    );
+    return response.data.data;
+  },
 };
 

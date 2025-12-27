@@ -5,6 +5,7 @@ import { ProfilePicture } from '../common/ProfilePicture';
 import { usePortrait } from '../../hooks/usePortrait';
 import { useParams } from 'react-router-dom';
 import { useModules } from '../../hooks/useModules';
+import { useSidebarStore } from '../../store/sidebarStore';
 
 export const Header = () => {
   const { user } = useAuthStore();
@@ -16,9 +17,10 @@ export const Header = () => {
   // Get current module name if on a module page, otherwise default to PENTADBIR SISTEM
   const currentModule = moduleCode ? modules.find(m => m.MOD_MODULCODE === moduleCode) : null;
   const headerTitle = currentModule?.MOD_MODULNAME || 'PENTADBIR SISTEM';
+  const { isCollapsed } = useSidebarStore();
 
   return (
-    <header className="fixed top-0 left-64 right-0 bg-white shadow-sm border-b border-gray-200 z-40 h-14">
+    <header className={`fixed top-0 ${isCollapsed ? 'left-16' : 'left-64'} right-0 bg-white shadow-sm border-b border-gray-200 z-40 h-14`}>
       <div className="h-full px-6 flex items-center justify-between">
         <div className="flex items-center">
           <h1 className="text-xl font-bold text-gray-900">{headerTitle}</h1>
