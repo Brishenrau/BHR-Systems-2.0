@@ -8,28 +8,38 @@ export const ModulePage = () => {
   const [currentProgram, setCurrentProgram] = useState<{ programCode: string; programName: string; moduleCode: string } | null>(null);
   
   // Find the program name from the menu data
+  // Note: URL parameter is named 'moduleCode' but it actually contains the programCode
   useEffect(() => {
     if (!loading && menuItems.length > 0 && moduleCode) {
       const allPrograms = menuItems.flatMap(item => item.programs);
       
-      // Try exact match first
+      // The URL parameter 'moduleCode' actually contains the programCode
+      // Try exact match first on programCode
       let found = allPrograms.find(p => p.programCode === moduleCode);
       
-      // If not found, try case-insensitive
+      // If not found, try case-insensitive match on programCode
       if (!found) {
         found = allPrograms.find(
           p => p.programCode?.toUpperCase() === moduleCode?.toUpperCase()
         );
       }
       
+      // If still not found, try matching by moduleCode (in case URL actually has module code)
+      if (!found) {
+        found = allPrograms.find(
+          p => p.moduleCode?.toUpperCase() === moduleCode?.toUpperCase()
+        );
+      }
+      
       if (found) {
-        // Verify we found the right program
-        console.log('Found program:', {
-          urlCode: moduleCode,
-          foundCode: found.programCode,
-          foundName: found.programName,
-          match: found.programCode === moduleCode ? 'exact' : 'case-insensitive'
-        });
+        // Double-check we have the right program
+        if (found.programCode !== moduleCode && found.programCode.toUpperCase() !== moduleCode.toUpperCase()) {
+          console.warn('Potential mismatch - found program by moduleCode but URL has different programCode:', {
+            urlCode: moduleCode,
+            foundProgramCode: found.programCode,
+            foundModuleCode: found.moduleCode
+          });
+        }
         
         setCurrentProgram({
           programCode: found.programCode,
@@ -38,12 +48,15 @@ export const ModulePage = () => {
         });
       } else {
         // Program not found - log for debugging
-        console.warn('Program not found in menu:', {
+        console.error('Program not found in menu data:', {
           requestedCode: moduleCode,
-          availablePrograms: allPrograms.map(p => ({ 
-            code: p.programCode, 
+          totalPrograms: allPrograms.length,
+          availablePrograms: allPrograms.slice(0, 10).map(p => ({ 
+            programCode: p.programCode,
+            moduleCode: p.moduleCode,
             name: p.programName 
-          }))
+          })),
+          message: allPrograms.length > 10 ? `... and ${allPrograms.length - 10} more` : ''
         });
         setCurrentProgram(null);
       }

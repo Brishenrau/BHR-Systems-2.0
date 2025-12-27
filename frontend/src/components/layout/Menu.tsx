@@ -61,22 +61,33 @@ export const Menu = () => {
         <div className="my-2 border-t border-gray-700"></div>
       )}
 
-      {/* Modules List */}
+      {/* Modules List - Using programCode for unique identification */}
       {allPrograms.length > 0 && (
         <>
-          {allPrograms.map((program) => (
-            <Link
-              key={program.programCode}
-              to={`/module/${program.programCode}`}
-              className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === `/module/${program.programCode}`
-                  ? 'bg-cyan-500 text-white'
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-              }`}
-            >
-              {program.programName}
-            </Link>
-          ))}
+          {allPrograms.map((program) => {
+            // Debug: Log program data to help identify issues
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Menu item:', {
+                programCode: program.programCode,
+                moduleCode: program.moduleCode,
+                programName: program.programName
+              });
+            }
+            
+            return (
+              <Link
+                key={program.programCode}
+                to={`/module/${program.programCode}`}
+                className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  location.pathname === `/module/${program.programCode}`
+                    ? 'bg-cyan-500 text-white'
+                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                }`}
+              >
+                {program.programName}
+              </Link>
+            );
+          })}
         </>
       )}
 
