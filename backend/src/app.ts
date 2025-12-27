@@ -7,6 +7,7 @@ import menuRoutes from './routes/menu.routes';
 import moduleRoutes from './routes/module.routes';
 import accessRoutes from './routes/access.routes';
 import portraitRoutes from './routes/portrait.routes';
+import programRoutes from './routes/program.routes';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 
 // Load environment variables
@@ -44,6 +45,7 @@ app.use('/api/v1/menu', menuRoutes);
 app.use('/api/v1/modules', moduleRoutes);
 app.use('/api/v1/access', accessRoutes);
 app.use('/api/v1/portrait', portraitRoutes);
+app.use('/api/v1/programs', programRoutes);
 
 // Error handling
 app.use(notFoundHandler);

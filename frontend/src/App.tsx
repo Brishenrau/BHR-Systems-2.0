@@ -1,9 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { ModulePage } from './pages/ModulePage';
 import { ModuleCodePage } from './pages/ModuleCodePage';
+import { ProgramCodePage } from './pages/ProgramCodePage';
 import { ProgramPage } from './pages/ProgramPage';
 import { UserAccessPage } from './pages/UserAccessPage';
 import { NotFound } from './pages/NotFound';
@@ -23,6 +24,11 @@ const ProgramRoute = () => {
   // KAWALAN PENCAPAIAN MODUL program - handle both possible codes
   if (programCode === 'ADM_ACCESCODE' || programCode === 'BHR_ACCESSMDL') {
     return <UserAccessPage />;
+  }
+  
+  // PENYELENGGARAAN ATURCARA program
+  if (programCode === 'BHR_PGRAMCODE') {
+    return <ProgramCodePage />;
   }
   
   // All other programs go to ProgramPage
