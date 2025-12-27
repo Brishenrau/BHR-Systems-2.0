@@ -1,12 +1,15 @@
 import express from 'express';
 import { ModuleController } from '../controllers/module.controller';
-import { authenticateToken } from '../middleware/auth.middleware';
+import { authenticate } from '../middleware/auth.middleware';
 
 const router = express.Router();
 const moduleController = new ModuleController();
 
-router.post('/', authenticateToken, moduleController.createModule.bind(moduleController));
-router.get('/', authenticateToken, moduleController.getAllModules.bind(moduleController));
+// All module routes require authentication
+router.use(authenticate);
+
+router.post('/', moduleController.createModule.bind(moduleController));
+router.get('/', moduleController.getAllModules.bind(moduleController));
 
 export default router;
 
