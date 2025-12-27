@@ -33,7 +33,7 @@ export const Menu = () => {
         to="/"
         className={`flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-colors mb-2 ${
           isHome
-            ? 'bg-cyan-500 text-white'
+            ? 'bg-blue-500 text-white'
             : 'text-gray-300 hover:bg-gray-700 hover:text-white'
         }`}
       >
@@ -66,8 +66,8 @@ export const Menu = () => {
               key={module.MOD_MODULCODE}
               to={`/module/${module.MOD_MODULCODE}`}
               className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === `/module/${module.MOD_MODULCODE}`
-                  ? 'bg-cyan-500 text-white'
+                location.pathname === `/module/${module.MOD_MODULCODE}` || location.pathname.startsWith(`/module/${module.MOD_MODULCODE}/`)
+                  ? 'bg-blue-500 text-white'
                   : 'text-gray-300 hover:bg-gray-700 hover:text-white'
               }`}
             >

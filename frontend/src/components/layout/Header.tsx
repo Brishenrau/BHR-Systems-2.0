@@ -3,19 +3,25 @@ import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../common/Button';
 import { ProfilePicture } from '../common/ProfilePicture';
 import { usePortrait } from '../../hooks/usePortrait';
+import { useParams } from 'react-router-dom';
+import { useModules } from '../../hooks/useModules';
 
 export const Header = () => {
   const { user } = useAuthStore();
   const { logout } = useAuth();
   const { imageUrl } = usePortrait(user?.USE_PAYNUMBER);
+  const { moduleCode } = useParams<{ moduleCode?: string }>();
+  const { modules } = useModules();
+  
+  // Get current module name if on a module page, otherwise default to PENTADBIR SISTEM
+  const currentModule = moduleCode ? modules.find(m => m.MOD_MODULCODE === moduleCode) : null;
+  const headerTitle = currentModule?.MOD_MODULNAME || 'PENTADBIR SISTEM';
 
   return (
-    <header className="fixed top-0 left-64 right-0 bg-white shadow-sm border-b border-gray-200 z-40 h-16">
+    <header className="fixed top-0 left-64 right-0 bg-white shadow-sm border-b border-gray-200 z-40 h-14">
       <div className="h-full px-6 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-bold text-gray-900">BHR Systems 2.0</h1>
-          <span className="text-gray-300">|</span>
-          <span className="text-sm text-gray-600">Majlis Perbandaran Kulim</span>
+        <div className="flex items-center">
+          <h1 className="text-xl font-bold text-gray-900">{headerTitle}</h1>
         </div>
         <div className="flex items-center space-x-4">
           {user && (
