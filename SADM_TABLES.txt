@@ -1,7 +1,7 @@
 create table BHR_PAYNUMBER
 (USE_PAYNUMBER		varchar2(12)	not null,		-- SPER.PER_MASTERREC.MAS_PAYNUMBER
  USE_PTJPKCODE		varchar2(6)	not null,		-- SUTL.UTL_PTJPKCODE.PTJ_PTJPKCODE
- USE_SHORTNAME		number(20)	not null,		-- Free Text
+ USE_SHORTNAME		varchar2(20)	not null,		-- Free Text
  USE_USERLEVEL		varchar2(1)	default 'U',		-- 1,..9
  USE_STATUSFLG		varchar2(1)	default 'Y',		-- Active Status [Y]es [N]o
  USE_ENTRYOPER		varchar2(10)	not null,		-- :global.GLO_PAYNUMBER
@@ -15,7 +15,7 @@ create table BHR_PAYNUMBER
 create table BHR_MODULCODE
 (MOD_MODULCODE		varchar2(4)	not null,		-- SPER.PER_MASTERREC.MAS_PAYNUMBER
  MOD_MODULSIRI		number(2)	not null,		-- SUTL.UTL_PTJPKCODE.PTJ_PTJPKCODE
- MOD_MODULNAME		number(30)	not null,		-- Free Text
+ MOD_MODULNAME		varchar2(30)	not null,		-- Free Text
  MOD_STATUSFLG		varchar2(1)	default 'Y',		-- Active Status [Y]es [N]o
  MOD_ENTRYOPER		varchar2(10)	not null,		-- :global.GLO_PAYNUMBER
  MOD_ENTRYDATE		date		sysdate,		-- Server system datetime

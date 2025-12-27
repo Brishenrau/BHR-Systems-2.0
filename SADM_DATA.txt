@@ -50,3 +50,14 @@ MEN_MENNUMBER MEN_MENHEADER        MEN_ENTRYO MEN_ENTRY MEN_MODFYO MEN_MODFY
             7 LAPORAN TAHUNAN      10703      27-DEC-25
 
 7 rows selected.
+
+SQL> desc sper.per_portraits
+ Name                                                                                                  Null?    Type
+ ---------------------------------------------------------------------------------------------------
+ POR_PAYNUMBER                                                                                                  VARCHAR2(10)
+ POR_PORTIMAGE                                                                                                  LONG RAW
+ POR_PORTSPATH                                                                                                  VARCHAR2(40)
+ POR_ENTRYOPER                                                                                                  VARCHAR2(10)
+ POR_ENTRYDATE                                                                                                  DATE
+ POR_MODFYOPER                                                                                                  VARCHAR2(10)
+ POR_MODFYDATE                                                                                                  DATE
