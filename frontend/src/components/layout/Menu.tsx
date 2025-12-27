@@ -1,8 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useMenu } from '../../hooks/useMenu';
+import { useModules } from '../../hooks/useModules';
 
 export const Menu = () => {
-  const { menuItems, loading, error } = useMenu();
+  const { modules, loading, error } = useModules();
   const location = useLocation();
   const isHome = location.pathname === '/';
 
@@ -21,13 +21,10 @@ export const Menu = () => {
   if (error) {
     return (
       <div className="p-4 bg-red-900/20 border border-red-700 rounded-lg">
-        <p className="text-sm text-red-300">Failed to load menu: {error}</p>
+        <p className="text-sm text-red-300">Failed to load modules: {error}</p>
       </div>
     );
   }
-
-  // Flatten all menus - each menu stands alone
-  const allPrograms = menuItems.length > 0 ? menuItems.flatMap(item => item.programs) : [];
 
   return (
     <div className="space-y-1">
@@ -57,43 +54,32 @@ export const Menu = () => {
       </Link>
 
       {/* Separator Line */}
-      {allPrograms.length > 0 && (
+      {modules.length > 0 && (
         <div className="my-2 border-t border-gray-700"></div>
       )}
 
-      {/* Modules List - Using programCode for unique identification */}
-      {allPrograms.length > 0 && (
+      {/* Modules List - Display modules from BHR_MODULCODE */}
+      {modules.length > 0 && (
         <>
-          {allPrograms.map((program) => {
-            // Debug: Log program data to help identify issues
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Menu item:', {
-                programCode: program.programCode,
-                moduleCode: program.moduleCode,
-                programName: program.programName
-              });
-            }
-            
-            return (
-              <Link
-                key={program.programCode}
-                to={`/module/${program.programCode}`}
-                className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                  location.pathname === `/module/${program.programCode}`
-                    ? 'bg-cyan-500 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                }`}
-              >
-                {program.programName}
-              </Link>
-            );
-          })}
+          {modules.map((module) => (
+            <Link
+              key={module.MOD_MODULCODE}
+              to={`/module/${module.MOD_MODULCODE}`}
+              className={`block px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                location.pathname === `/module/${module.MOD_MODULCODE}`
+                  ? 'bg-cyan-500 text-white'
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+              }`}
+            >
+              {module.MOD_MODULNAME}
+            </Link>
+          ))}
         </>
       )}
 
-      {allPrograms.length === 0 && !loading && !error && (
+      {modules.length === 0 && !loading && !error && (
         <div className="text-sm text-gray-400 p-4">
-          <p>No menu items available</p>
+          <p>No modules available</p>
         </div>
       )}
     </div>

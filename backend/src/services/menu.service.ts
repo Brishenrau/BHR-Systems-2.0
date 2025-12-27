@@ -1,7 +1,7 @@
 import { MenuRepository } from '../repositories/MenuRepository';
 import { AccessRepository } from '../repositories/AccessRepository';
 import { ModuleRepository } from '../repositories/ModuleRepository';
-import type { MenuItem, ProgramItem } from '../types/database.types';
+import type { MenuItem, ProgramItem, BHR_MODULCODE } from '../types/database.types';
 
 export class MenuService {
   private menuRepository = new MenuRepository();
@@ -71,6 +71,26 @@ export class MenuService {
     }).filter((menu) => menu.programs.length > 0); // Remove empty menus
     
     return filteredMenus;
+  }
+
+  /**
+   * Get accessible modules for current user
+   * Returns modules from BHR_MODULCODE filtered by user access
+   */
+  async getUserModules(payNumber: string): Promise<BHR_MODULCODE[]> {
+    // Get user access modules
+    const access = await this.accessRepository.findByPayNumber(payNumber);
+    const accessModules = access?.ACC_MODACCESS || 'TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT';
+    
+    // Get all active modules
+    const allModules = await this.moduleRepository.findAllActive();
+    
+    // Filter modules based on user access
+    const accessibleModules = allModules.filter((module) => {
+      return this.hasModuleAccess(module.MOD_MODULSIRI, accessModules);
+    });
+    
+    return accessibleModules;
   }
 
   /**

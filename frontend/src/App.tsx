@@ -33,7 +33,6 @@ function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="module/:moduleCode" element={<ModulePage />} />
-            <Route path="program/:programCode" element={<ModulePage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

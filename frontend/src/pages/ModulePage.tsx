@@ -1,72 +1,38 @@
 import { useParams } from 'react-router-dom';
+import { useModules } from '../hooks/useModules';
 import { useMenu } from '../hooks/useMenu';
 import { useEffect, useState } from 'react';
+import type { BHR_MODULCODE } from '../types/database.types';
 
 export const ModulePage = () => {
   const { moduleCode } = useParams<{ moduleCode: string }>();
-  const { menuItems, loading } = useMenu();
-  const [currentProgram, setCurrentProgram] = useState<{ programCode: string; programName: string; moduleCode: string } | null>(null);
+  const { modules, loading: modulesLoading } = useModules();
+  const { menuItems, loading: menuLoading } = useMenu();
+  const [currentModule, setCurrentModule] = useState<BHR_MODULCODE | null>(null);
+  const [modulePrograms, setModulePrograms] = useState<Array<{ programCode: string; programName: string }>>([]);
   
-  // Find the program name from the menu data
-  // Note: URL parameter is named 'moduleCode' but it actually contains the programCode
+  // Find the module from modules data
   useEffect(() => {
-    if (!loading && menuItems.length > 0 && moduleCode) {
-      const allPrograms = menuItems.flatMap(item => item.programs);
-      
-      // The URL parameter 'moduleCode' actually contains the programCode
-      // Try exact match first on programCode
-      let found = allPrograms.find(p => p.programCode === moduleCode);
-      
-      // If not found, try case-insensitive match on programCode
-      if (!found) {
-        found = allPrograms.find(
-          p => p.programCode?.toUpperCase() === moduleCode?.toUpperCase()
-        );
-      }
-      
-      // If still not found, try matching by moduleCode (in case URL actually has module code)
-      if (!found) {
-        found = allPrograms.find(
-          p => p.moduleCode?.toUpperCase() === moduleCode?.toUpperCase()
-        );
-      }
-      
+    if (!modulesLoading && modules.length > 0 && moduleCode) {
+      const found = modules.find(m => m.MOD_MODULCODE === moduleCode);
       if (found) {
-        // Double-check we have the right program
-        if (found.programCode !== moduleCode && found.programCode.toUpperCase() !== moduleCode.toUpperCase()) {
-          console.warn('Potential mismatch - found program by moduleCode but URL has different programCode:', {
-            urlCode: moduleCode,
-            foundProgramCode: found.programCode,
-            foundModuleCode: found.moduleCode
-          });
-        }
-        
-        setCurrentProgram({
-          programCode: found.programCode,
-          programName: found.programName,
-          moduleCode: found.moduleCode
-        });
-      } else {
-        // Program not found - log for debugging
-        console.error('Program not found in menu data:', {
-          requestedCode: moduleCode,
-          totalPrograms: allPrograms.length,
-          availablePrograms: allPrograms.slice(0, 10).map(p => ({ 
-            programCode: p.programCode,
-            moduleCode: p.moduleCode,
-            name: p.programName 
-          })),
-          message: allPrograms.length > 10 ? `... and ${allPrograms.length - 10} more` : ''
-        });
-        setCurrentProgram(null);
+        setCurrentModule(found);
       }
-    } else if (!loading && moduleCode) {
-      // Menu loaded but no items
-      console.warn('Menu loaded but empty:', { moduleCode, menuItems });
     }
-  }, [menuItems, loading, moduleCode]);
+  }, [modules, modulesLoading, moduleCode]);
   
-  const moduleName = currentProgram?.programName || moduleCode || 'Module';
+  // Find all programs under this module
+  useEffect(() => {
+    if (!menuLoading && menuItems.length > 0 && moduleCode) {
+      const allPrograms = menuItems.flatMap(item => item.programs);
+      const programs = allPrograms
+        .filter(p => p.moduleCode === moduleCode)
+        .map(p => ({ programCode: p.programCode, programName: p.programName }));
+      setModulePrograms(programs);
+    }
+  }, [menuItems, menuLoading, moduleCode]);
+  
+  const moduleName = currentModule?.MOD_MODULNAME || moduleCode || 'Module';
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -74,9 +40,9 @@ export const ModulePage = () => {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{moduleName}</h1>
           <div className="flex gap-4 text-gray-600">
-            <p>Program Code: <span className="font-mono font-semibold">{currentProgram?.programCode || moduleCode}</span></p>
-            {currentProgram?.moduleCode && (
-              <p>Module Code: <span className="font-mono font-semibold">{currentProgram.moduleCode}</span></p>
+            <p>Module Code: <span className="font-mono font-semibold">{currentModule?.MOD_MODULCODE || moduleCode}</span></p>
+            {currentModule?.MOD_MODULSIRI && (
+              <p>Sequence: <span className="font-mono font-semibold">{currentModule.MOD_MODULSIRI}</span></p>
             )}
           </div>
         </div>
@@ -101,17 +67,29 @@ export const ModulePage = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Module Information</h3>
             <div className="space-y-2">
               <div>
-                <span className="text-sm font-medium text-gray-600">Program Name:</span>
+                <span className="text-sm font-medium text-gray-600">Module Name:</span>
                 <p className="text-base text-gray-900">{moduleName}</p>
               </div>
               <div>
-                <span className="text-sm font-medium text-gray-600">Program Code:</span>
-                <p className="text-base text-gray-900 font-mono">{currentProgram?.programCode || moduleCode}</p>
+                <span className="text-sm font-medium text-gray-600">Module Code:</span>
+                <p className="text-base text-gray-900 font-mono">{currentModule?.MOD_MODULCODE || moduleCode}</p>
               </div>
-              {currentProgram?.moduleCode && (
+              {currentModule?.MOD_MODULSIRI && (
                 <div>
-                  <span className="text-sm font-medium text-gray-600">Module Code:</span>
-                  <p className="text-base text-gray-900 font-mono">{currentProgram.moduleCode}</p>
+                  <span className="text-sm font-medium text-gray-600">Sequence:</span>
+                  <p className="text-base text-gray-900 font-mono">{currentModule.MOD_MODULSIRI}</p>
+                </div>
+              )}
+              {modulePrograms.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-300">
+                  <span className="text-sm font-medium text-gray-600">Programs in this module:</span>
+                  <ul className="mt-2 space-y-1">
+                    {modulePrograms.map((program) => (
+                      <li key={program.programCode} className="text-sm text-gray-700">
+                        • {program.programName}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
             </div>

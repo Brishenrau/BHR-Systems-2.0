@@ -1,5 +1,5 @@
 import apiClient from './api';
-import type { MenuItem, ProgramItem } from '../types/database.types';
+import type { MenuItem, ProgramItem, BHR_MODULCODE } from '../types/database.types';
 
 // API response wrapper type (backend wraps responses)
 interface ApiResponse<T> {
@@ -9,6 +9,12 @@ interface ApiResponse<T> {
 }
 
 export const menuService = {
+  // Get accessible modules for current user (from BHR_MODULCODE)
+  async getUserModules(): Promise<BHR_MODULCODE[]> {
+    const response = await apiClient.get<ApiResponse<BHR_MODULCODE[]>>('/menu/user-modules');
+    return response.data.data;
+  },
+
   // Get menu structure for current user (reads from BHR_MENHEADER & BHR_PGRAMCODE)
   // Backend filters based on user's access modules
   async getUserMenu(): Promise<MenuItem[]> {

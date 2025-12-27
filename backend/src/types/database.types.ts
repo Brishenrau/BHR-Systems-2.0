@@ -15,7 +15,7 @@ export interface BHR_PAYNUMBER {
 export interface BHR_MODULCODE {
   MOD_MODULCODE: string;
   MOD_MODULSIRI: number;
-  MOD_MODULNAME: number;
+  MOD_MODULNAME: string;  // Fixed: should be string, not number
   MOD_STATUSFLG: string;
   MOD_ENTRYOPER: string;
   MOD_ENTRYDATE: Date | string;
