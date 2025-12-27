@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 interface ProfilePictureProps {
   name?: string;
@@ -15,6 +15,8 @@ export const ProfilePicture: React.FC<ProfilePictureProps> = ({
   showStatus = false,
   status = 'online',
 }) => {
+  const [imageError, setImageError] = useState(false);
+  
   const sizeClasses = {
     sm: 'w-8 h-8 text-xs',
     md: 'w-10 h-10 text-sm',
@@ -29,13 +31,27 @@ export const ProfilePicture: React.FC<ProfilePictureProps> = ({
 
   const initial = name?.charAt(0).toUpperCase() || 'U';
 
+  // Reset error state when imageUrl changes
+  React.useEffect(() => {
+    setImageError(false);
+  }, [imageUrl]);
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error('Failed to load profile image:', imageUrl?.substring(0, 50) + '...');
+    console.error('Image error event:', e);
+    setImageError(true);
+  };
+
+  const shouldShowImage = imageUrl && !imageError;
+
   return (
     <div className="relative inline-block">
-      {imageUrl ? (
+      {shouldShowImage ? (
         <img
           src={imageUrl}
           alt={name || 'User'}
           className={`${sizeClasses[size]} rounded-full object-cover shadow-md`}
+          onError={handleImageError}
         />
       ) : (
         <div

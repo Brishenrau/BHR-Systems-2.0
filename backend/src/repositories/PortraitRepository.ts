@@ -19,6 +19,8 @@ export class PortraitRepository {
   async findByPayNumber(payNumber: string): Promise<PER_PORTRAITS | null> {
     const connection = await getConnection();
     try {
+      // Try using RAWTOHEX first, then convert back to Buffer if needed
+      // LONG RAW can be tricky, so we'll try multiple approaches
       const sql = `
         SELECT 
           POR_PAYNUMBER,
@@ -32,20 +34,53 @@ export class PortraitRepository {
         WHERE POR_PAYNUMBER = :1
       `;
       
-      const result = await connection.execute<PER_PORTRAITS>(
-        sql,
-        [payNumber],
-        {
-          outFormat: oracledb.OUT_FORMAT_OBJECT,
-          fetchInfo: {
-            POR_PORTIMAGE: { type: oracledb.BUFFER }, // Fetch as Buffer
-          },
-        }
-      );
+      console.log('Executing portrait query for payNumber:', payNumber);
       
-      return result.rows && result.rows.length > 0 ? result.rows[0] : null;
-    } catch (error) {
+      // Try with fetchInfo first
+      let result;
+      try {
+        result = await connection.execute<PER_PORTRAITS>(
+          sql,
+          [payNumber],
+          {
+            outFormat: oracledb.OUT_FORMAT_OBJECT,
+            fetchInfo: {
+              POR_PORTIMAGE: { type: oracledb.BUFFER }, // Fetch as Buffer
+            },
+          }
+        );
+      } catch (fetchError: any) {
+        console.log('Fetch with BUFFER type failed, trying without fetchInfo:', fetchError.message);
+        // If that fails, try without fetchInfo (Oracle will return it as-is)
+        result = await connection.execute<PER_PORTRAITS>(
+          sql,
+          [payNumber],
+          {
+            outFormat: oracledb.OUT_FORMAT_OBJECT,
+          }
+        );
+      }
+      
+      console.log('Portrait query result rows:', result.rows?.length || 0);
+      
+      if (result.rows && result.rows.length > 0) {
+        const portrait = result.rows[0];
+        console.log('Portrait found - POR_PORTIMAGE exists:', !!portrait.POR_PORTIMAGE);
+        if (portrait.POR_PORTIMAGE) {
+          console.log('POR_PORTIMAGE type:', typeof portrait.POR_PORTIMAGE);
+          console.log('POR_PORTIMAGE is Buffer:', Buffer.isBuffer(portrait.POR_PORTIMAGE));
+          if (Buffer.isBuffer(portrait.POR_PORTIMAGE)) {
+            console.log('POR_PORTIMAGE Buffer length:', portrait.POR_PORTIMAGE.length);
+          }
+        }
+        return portrait;
+      }
+      
+      return null;
+    } catch (error: any) {
       console.error('Error fetching portrait:', error);
+      console.error('Error message:', error.message);
+      console.error('Error code:', error.errorCode);
       throw error;
     } finally {
       try {

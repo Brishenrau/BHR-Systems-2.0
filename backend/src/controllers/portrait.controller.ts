@@ -11,6 +11,8 @@ export class PortraitController {
     try {
       const { payNumber } = req.params;
       
+      console.log('Portrait request for payNumber:', payNumber);
+      
       if (!payNumber) {
         res.status(400).json({
           success: false,
@@ -20,6 +22,7 @@ export class PortraitController {
       }
 
       const imageDataUrl = await portraitService.getPortraitImage(payNumber);
+      console.log('Portrait service returned:', imageDataUrl ? 'Image found' : 'No image');
 
       if (!imageDataUrl) {
         res.status(404).json({
@@ -36,9 +39,12 @@ export class PortraitController {
         },
       });
     } catch (error: any) {
+      console.error('Error in getPortrait controller:', error);
+      console.error('Error stack:', error.stack);
       res.status(500).json({
         success: false,
         message: error.message || 'Failed to get portrait',
+        error: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       });
     }
   }
