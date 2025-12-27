@@ -20,3 +20,33 @@ ACC_PAYNUMBE ACC_MODACCESS                                                A ACC_
 ------------ ------------------------------------------------------------ - ---------- --------- ---
 10703        YYYYTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT Y 10703      27-DEC-25
 18817        TTYYTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT Y 10703      27-DEC-25
+
+
+SQL> select * from BHR_PGRAMCODE;
+
+PGR_PGRAMCODE PGR_ PGR_MENNUMBER PGR_PGRAMNAME                                                PGR_SEQUENCED PGR_ENTRYO PGR_ENTRY PGR_MOD
+------------- ---- ------------- ------------------------------------------------------------ ------
+PER_KAWALMODL SPER             1 FAIL KAWALAN MODUL PERSONELIA                                            1 10703      27-DEC-25
+PER_TARAFKHID SPER             1 FAIL TARAF PERKHIDMATAN                                                  2 10703      27-DEC-25
+PER_JAWATCODE SPER             1 FAIL KOD JAWATAN                                                         3 10703      27-DEC-25
+PER_MASTERREC SPER             2 FAIL INDUK PERSONEL                                                      1 10703      27-DEC-25
+BHR_PAYNUMBER SADM             1 KOD PENGGUNA                                                             1 10703      27-DEC-25
+BHR_MODULCODE SADM             1 KOD MODUL                                                                2 10703      27-DEC-25
+BHR_MENHEADER SADM             1 KOD TAJUK MENU                                                           3 10703      27-DEC-25
+ADM_ACCESCODE SADM             1 KAWALAN PENCAPAIAN MODUL                                                 4 10703      27-DEC-25
+
+8 rows selected.
+
+SQL> select * from BHR_MENHEADER;
+
+MEN_MENNUMBER MEN_MENHEADER        MEN_ENTRYO MEN_ENTRY MEN_MODFYO MEN_MODFY
+------------- -------------------- ---------- --------- ---------- ---------
+            1 FAIL-FAIL KOD        10703      27-DEC-25
+            2 KEMASUKAN DATA       10703      27-DEC-25
+            3 BAHAGIAN PEMPROSESAN 10703      27-DEC-25
+            4 PERTANYAAN           10703      27-DEC-25
+            5 LAPORAN HARIAN       10703      27-DEC-25
+            6 LAPORAN BULANAN      10703      27-DEC-25
+            7 LAPORAN TAHUNAN      10703      27-DEC-25
+
+7 rows selected.
