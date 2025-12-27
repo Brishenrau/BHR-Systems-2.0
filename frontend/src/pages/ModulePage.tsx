@@ -1,27 +1,14 @@
 import { useParams, Link } from 'react-router-dom';
-import { useModules } from '../hooks/useModules';
 import { menuService } from '../services/menu.service';
 import { useEffect, useState } from 'react';
-import type { BHR_MODULCODE, MenuItem } from '../types/database.types';
+import type { MenuItem } from '../types/database.types';
 import type { ApiError } from '../types/api.types';
 
 export const ModulePage = () => {
   const { moduleCode } = useParams<{ moduleCode: string }>();
-  const { modules, loading: modulesLoading } = useModules();
-  const [currentModule, setCurrentModule] = useState<BHR_MODULCODE | null>(null);
   const [moduleMenus, setModuleMenus] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Find the module from modules data
-  useEffect(() => {
-    if (!modulesLoading && modules.length > 0 && moduleCode) {
-      const found = modules.find(m => m.MOD_MODULCODE === moduleCode);
-      if (found) {
-        setCurrentModule(found);
-      }
-    }
-  }, [modules, modulesLoading, moduleCode]);
   
   // Fetch menu headers and programs for this module
   useEffect(() => {
@@ -46,21 +33,10 @@ export const ModulePage = () => {
 
     loadModuleMenus();
   }, [moduleCode]);
-  
-  const moduleName = currentModule?.MOD_MODULNAME || moduleCode || 'Module';
 
   return (
     <div className="max-w-7xl mx-auto">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{moduleName}</h1>
-          <div className="flex gap-4 text-gray-600">
-            <p>Module Code: <span className="font-mono font-semibold">{currentModule?.MOD_MODULCODE || moduleCode}</span></p>
-            {currentModule?.MOD_MODULSIRI && (
-              <p>Sequence: <span className="font-mono font-semibold">{currentModule.MOD_MODULSIRI}</span></p>
-            )}
-          </div>
-        </div>
 
         {/* Menu Headers and Programs */}
         {loading ? (
