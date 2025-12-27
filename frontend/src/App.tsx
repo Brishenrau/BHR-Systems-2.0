@@ -5,6 +5,7 @@ import { Dashboard } from './pages/Dashboard';
 import { ModulePage } from './pages/ModulePage';
 import { ModuleCodePage } from './pages/ModuleCodePage';
 import { ProgramPage } from './pages/ProgramPage';
+import { UserAccessPage } from './pages/UserAccessPage';
 import { NotFound } from './pages/NotFound';
 import { Layout } from './components/layout/Layout';
 import { ProtectedRoute } from './components/features/auth/ProtectedRoute';
@@ -14,9 +15,15 @@ import './index.css';
 const ProgramRoute = () => {
   const { programCode } = useParams<{ programCode: string }>();
   
-  // Only BHR_MODULCODE should go to ModuleCodePage
+  // Route to specific program pages
   if (programCode === 'BHR_MODULCODE') {
     return <ModuleCodePage />;
+  }
+  
+  if (programCode === 'ADM_ACCESCODE') {
+    // For now, we'll need a payNumber parameter - this could be from query string or state
+    // For simplicity, let's show a form to select user first, or use current user
+    return <UserAccessPage />;
   }
   
   // All other programs go to ProgramPage
