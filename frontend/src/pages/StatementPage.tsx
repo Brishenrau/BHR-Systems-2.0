@@ -7,16 +7,24 @@ type TabType = 'statement' | 'bill';
 
 export const StatementPage = () => {
   const [accountNumber, setAccountNumber] = useState<string>('');
+  const [address, setAddress] = useState<string>('');
+  const [ownerName, setOwnerName] = useState<string>('');
+  const [searchType, setSearchType] = useState<'account' | 'address' | 'name'>('account');
   const [activeTab, setActiveTab] = useState<TabType>('statement');
   const [data, setData] = useState<StatementResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Format date for display
+  // Format date with time for display (dd/mm/yyyy hh24:mi format)
   const formatDate = (date: Date | string | null | undefined): string => {
     if (!date) return '';
     const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   // Format number with 2 decimal places
@@ -24,20 +32,12 @@ export const StatementPage = () => {
     return amount.toFixed(2);
   };
 
-  // Calculate running balance
+  // Calculate running balance (statements are already in chronological order from backend)
   const calculateBalances = (statements: TKN_STATEMENT[]): Map<number, number> => {
     const balances = new Map<number, number>();
     let runningBalance = 0;
-    
-    // Sort by date and serial (oldest first for proper balance calculation)
-    const sorted = [...statements].sort((a, b) => {
-      const dateA = new Date(a.STA_TARIKHTRX).getTime();
-      const dateB = new Date(b.STA_TARIKHTRX).getTime();
-      if (dateA !== dateB) return dateA - dateB;
-      return a.STA_NOMSERIAL - b.STA_NOMSERIAL;
-    });
 
-    sorted.forEach((stmt, index) => {
+    statements.forEach((stmt, index) => {
       if (stmt.STA_TRANSDRCR === 'D') {
         runningBalance += stmt.STA_AMOUNTTRX;
       } else {
@@ -51,22 +51,58 @@ export const StatementPage = () => {
 
   // Load statement data
   const loadStatement = async () => {
-    if (!accountNumber || accountNumber.trim() === '') {
-      setError('Please enter an account number');
-      return;
-    }
-
-    const nomBakaun = parseInt(accountNumber.trim(), 10);
-    if (isNaN(nomBakaun)) {
-      setError('Invalid account number');
-      return;
-    }
-
     try {
       setLoading(true);
       setError(null);
+      
+      let nomBakaun: number;
+
+      if (searchType === 'account') {
+        if (!accountNumber || accountNumber.trim() === '') {
+          setError('Please enter an account number');
+          return;
+        }
+        nomBakaun = parseInt(accountNumber.trim(), 10);
+        if (isNaN(nomBakaun)) {
+          setError('Invalid account number');
+          return;
+        }
+      } else if (searchType === 'address') {
+        if (!address || address.trim() === '') {
+          setError('Please enter an address');
+          return;
+        }
+        const accountNumbers = await statementService.searchAccounts({ address: address.trim() });
+        if (accountNumbers.length === 0) {
+          setError('No accounts found with the given address');
+          return;
+        }
+        if (accountNumbers.length > 1) {
+          setError(`Multiple accounts found (${accountNumbers.length}). Please use account number search.`);
+          return;
+        }
+        nomBakaun = accountNumbers[0];
+      } else { // name
+        if (!ownerName || ownerName.trim() === '') {
+          setError('Please enter owner name');
+          return;
+        }
+        const accountNumbers = await statementService.searchAccounts({ ownerName: ownerName.trim() });
+        if (accountNumbers.length === 0) {
+          setError('No accounts found with the given owner name');
+          return;
+        }
+        if (accountNumbers.length > 1) {
+          setError(`Multiple accounts found (${accountNumbers.length}). Please use account number search.`);
+          return;
+        }
+        nomBakaun = accountNumbers[0];
+      }
+
       const result = await statementService.getStatementByAccount(nomBakaun);
       setData(result);
+      // Update account number field with the found account
+      setAccountNumber(nomBakaun.toString());
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Failed to load statement');
@@ -83,35 +119,100 @@ export const StatementPage = () => {
   };
 
   const balances = data ? calculateBalances(data.statements) : new Map();
-  const sortedStatements = data 
-    ? [...data.statements].sort((a, b) => {
-        const dateA = new Date(a.STA_TARIKHTRX).getTime();
-        const dateB = new Date(b.STA_TARIKHTRX).getTime();
-        if (dateA !== dateB) return dateB - dateA; // Newest first
-        return b.STA_NOMSERIAL - a.STA_NOMSERIAL;
-      })
-    : [];
+  // Statements are already in chronological order from backend, no need to sort
+  const sortedStatements = data ? data.statements : [];
 
   return (
     <div className="max-w-7xl mx-auto">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">PENYATA HUTANG TAKSIRAN</h1>
 
-        {/* Account Number Input */}
+        {/* Search Form */}
         <form onSubmit={handleSubmit} className="mb-6">
+          <div className="mb-4">
+            <div className="flex gap-4 mb-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="searchType"
+                  value="account"
+                  checked={searchType === 'account'}
+                  onChange={(e) => setSearchType(e.target.value as 'account')}
+                  className="mr-2"
+                />
+                <span className="text-sm font-medium text-gray-700">NOMBOR AKAUN</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="searchType"
+                  value="address"
+                  checked={searchType === 'address'}
+                  onChange={(e) => setSearchType(e.target.value as 'address')}
+                  className="mr-2"
+                />
+                <span className="text-sm font-medium text-gray-700">ALAMAT</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="searchType"
+                  value="name"
+                  checked={searchType === 'name'}
+                  onChange={(e) => setSearchType(e.target.value as 'name')}
+                  className="mr-2"
+                />
+                <span className="text-sm font-medium text-gray-700">NAMA PEMILIK</span>
+              </label>
+            </div>
+          </div>
           <div className="flex gap-4 items-end">
             <div className="flex-1">
-              <label htmlFor="accountNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                NOMBOR AKAUN (Account Number)
-              </label>
-              <input
-                type="text"
-                id="accountNumber"
-                value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value)}
-                placeholder="Enter account number (e.g., 35638)"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+              {searchType === 'account' && (
+                <>
+                  <label htmlFor="accountNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                    NOMBOR AKAUN (Account Number)
+                  </label>
+                  <input
+                    type="text"
+                    id="accountNumber"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                    placeholder="Enter account number (e.g., 35638)"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </>
+              )}
+              {searchType === 'address' && (
+                <>
+                  <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                    ALAMAT (Address) - Wildcard search
+                  </label>
+                  <input
+                    type="text"
+                    id="address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Enter address (e.g., LOBAK)"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </>
+              )}
+              {searchType === 'name' && (
+                <>
+                  <label htmlFor="ownerName" className="block text-sm font-medium text-gray-700 mb-2">
+                    NAMA PEMILIK (Owner Name) - Wildcard search
+                  </label>
+                  <input
+                    type="text"
+                    id="ownerName"
+                    value={ownerName}
+                    onChange={(e) => setOwnerName(e.target.value)}
+                    placeholder="Enter owner name (e.g., JAYAGANDAN)"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </>
+              )}
             </div>
             <button
               type="submit"

@@ -82,5 +82,17 @@ export class StatementService {
       },
     };
   }
+
+  /**
+   * Search for account numbers by address or owner name
+   */
+  async searchAccounts(searchCriteria: {
+    address?: string;
+    ownerName?: string;
+  }): Promise<number[]> {
+    // This will need to be adjusted based on your actual schema
+    // Assuming there's a property/pegangan table with address and owner info
+    return await this.statementRepository.searchAccountNumbers(searchCriteria);
+  }
 }
 

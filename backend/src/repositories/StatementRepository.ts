@@ -28,7 +28,7 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
         STA_ENTRYDATE
       FROM ${this.getFullTableName()}
       WHERE STA_NOMBAKAUN = :nomBakaun
-      ORDER BY STA_TARIKHTRX DESC, STA_NOMSERIAL DESC
+      ORDER BY STA_TARIKHTRX ASC, STA_TRANSCODE DESC, STA_TRANSDRCR DESC
     `;
     
     return await this.query(sql, {
@@ -69,6 +69,51 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
       nomBakaun,
       nomSerial,
     });
+  }
+
+  /**
+   * Search for account numbers by address or owner name (wildcard search)
+   * Returns distinct account numbers that match the search criteria
+   * Note: This assumes a property/pegangan table exists - adjust table/column names as needed
+   */
+  async searchAccountNumbers(searchCriteria: {
+    address?: string;
+    ownerName?: string;
+  }): Promise<number[]> {
+    const conditions: string[] = [];
+    const binds: Record<string, any> = {};
+
+    // Build WHERE conditions based on provided criteria
+    // Adjust table and column names based on your actual schema
+    if (searchCriteria.address) {
+      // Assuming PEG_ALAMATHRT is the address field in a property table
+      conditions.push('UPPER(p.PEG_ALAMATHRT) LIKE UPPER(:address)');
+      binds.address = `%${searchCriteria.address}%`;
+    }
+
+    if (searchCriteria.ownerName) {
+      // Adjust column name for owner name - this is a placeholder
+      // You may need to join with a different table for owner information
+      conditions.push('UPPER(p.NAMA_PEMILIK) LIKE UPPER(:ownerName)');
+      binds.ownerName = `%${searchCriteria.ownerName}%`;
+    }
+
+    if (conditions.length === 0) {
+      return [];
+    }
+
+    // Query to find distinct account numbers
+    // This structure assumes TKN_PEGANGAN table exists with PEG_NOMBAKAUN linking to STA_NOMBAKAUN
+    // Adjust based on your actual schema
+    const sql = `
+      SELECT DISTINCT s.STA_NOMBAKAUN
+      FROM ${this.getFullTableName()} s
+      INNER JOIN STKN.TKN_PEGANGAN p ON p.PEG_NOMBAKAUN = s.STA_NOMBAKAUN
+      WHERE ${conditions.join(' OR ')}
+    `;
+    
+    const results = await this.query(sql, binds) as { STA_NOMBAKAUN: number }[];
+    return results.map(r => r.STA_NOMBAKAUN);
   }
 }
 

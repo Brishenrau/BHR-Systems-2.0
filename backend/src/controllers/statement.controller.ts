@@ -33,3 +33,36 @@ export const getStatementByAccount = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Search for account numbers by address or owner name
+ * GET /api/v1/statements/search?address=...&ownerName=...
+ */
+export const searchAccounts = async (req: Request, res: Response) => {
+  try {
+    const { address, ownerName } = req.query;
+
+    if (!address && !ownerName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide either address or ownerName',
+      });
+    }
+
+    const accountNumbers = await statementService.searchAccounts({
+      address: address as string | undefined,
+      ownerName: ownerName as string | undefined,
+    });
+    
+    res.json({
+      success: true,
+      data: accountNumbers,
+    });
+  } catch (error) {
+    console.error('Error searching accounts:', error);
+    res.status(500).json({
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to search accounts',
+    });
+  }
+};
+
