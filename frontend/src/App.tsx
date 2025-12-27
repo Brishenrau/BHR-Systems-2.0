@@ -20,9 +20,8 @@ const ProgramRoute = () => {
     return <ModuleCodePage />;
   }
   
+  // KAWALAN PENCAPAIAN MODUL program
   if (programCode === 'ADM_ACCESCODE') {
-    // For now, we'll need a payNumber parameter - this could be from query string or state
-    // For simplicity, let's show a form to select user first, or use current user
     return <UserAccessPage />;
   }
   

@@ -9,13 +9,14 @@ export const UserAccessPage = () => {
   const { payNumber: paramPayNumber } = useParams<{ payNumber?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user: currentUser } = useAuthStore();
-  const [selectedPayNumber, setSelectedPayNumber] = useState<string>(
-    paramPayNumber || searchParams.get('payNumber') || currentUser?.USE_PAYNUMBER || ''
-  );
+  
+  // Initialize with current user's pay number if available
+  const initialPayNumber = paramPayNumber || searchParams.get('payNumber') || currentUser?.USE_PAYNUMBER || '';
+  const [selectedPayNumber, setSelectedPayNumber] = useState<string>(initialPayNumber);
   const [user, setUser] = useState<BHR_PAYNUMBER | null>(null);
   const [modules, setModules] = useState<BHR_MODULCODE[]>([]);
   const [accessString, setAccessString] = useState<string>('TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start as false, will be set to true when loading
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
