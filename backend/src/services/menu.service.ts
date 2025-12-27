@@ -98,21 +98,39 @@ export class MenuService {
    * Only returns headers that have programs for the given module
    */
   async getModuleMenus(moduleCode: string): Promise<MenuItem[]> {
-    // Use getUserMenu() which we know works, then filter by module code
-    // This ensures we're using the same working query pattern
-    const allMenuItems = await this.menuRepository.getUserMenu();
+    // Get all menu headers
+    const allMenus = await this.menuRepository.findAllMenus();
     
-    // Filter to only include programs for this module
-    const moduleMenuItems: MenuItem[] = allMenuItems
+    // Get programs for this module directly from repository
+    const modulePrograms = await this.menuRepository.getProgramsByModule(moduleCode);
+    
+    // Group programs by menu number
+    const menuMap = new Map<number, ProgramItem[]>();
+    
+    modulePrograms.forEach((program) => {
+      const programItem: ProgramItem = {
+        programCode: program.PGR_PGRAMCODE,
+        moduleCode: program.PGR_MODULCODE,
+        programName: program.PGR_PGRAMNAME,
+        sequence: program.PGR_SEQUENCED,
+      };
+      
+      if (!menuMap.has(program.PGR_MENNUMBER)) {
+        menuMap.set(program.PGR_MENNUMBER, []);
+      }
+      menuMap.get(program.PGR_MENNUMBER)!.push(programItem);
+    });
+    
+    // Map to menu items
+    const result: MenuItem[] = allMenus
+      .filter((menu) => menuMap.has(menu.MEN_MENNUMBER))
       .map((menu) => ({
-        ...menu,
-        programs: menu.programs.filter(
-          (program) => program.moduleCode.trim().toUpperCase() === moduleCode.trim().toUpperCase()
-        ),
-      }))
-      .filter((menu) => menu.programs.length > 0); // Only keep menus with programs
+        menuNumber: menu.MEN_MENNUMBER,
+        menuHeader: menu.MEN_MENHEADER,
+        programs: menuMap.get(menu.MEN_MENNUMBER)!.sort((a, b) => a.sequence - b.sequence),
+      }));
     
-    return moduleMenuItems;
+    return result;
   }
 
   /**
