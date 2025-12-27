@@ -1,9 +1,11 @@
 import { Menu } from './Menu';
 import { useAuthStore } from '../../store/authStore';
 import { ProfilePicture } from '../common/ProfilePicture';
+import { usePortrait } from '../../hooks/usePortrait';
 
 export const Sidebar = () => {
   const { user } = useAuthStore();
+  const { imageUrl } = usePortrait(user?.USE_PAYNUMBER);
 
   return (
     <aside className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-xl h-screen fixed left-0 top-0 flex flex-col z-50">
@@ -26,6 +28,7 @@ export const Sidebar = () => {
               {/* Profile Picture in Sidebar */}
               <ProfilePicture
                 name={user.USE_PAYNUMBER}
+                imageUrl={imageUrl || undefined}
                 size="lg"
                 showStatus
                 status="online"

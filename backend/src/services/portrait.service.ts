@@ -14,7 +14,7 @@ export class PortraitService {
     }
 
     // Handle Buffer (from Oracle LONG RAW)
-    if (Buffer.isBuffer(portrait.POR_PORTIMAGE)) {
+    if (portrait.POR_PORTIMAGE && Buffer.isBuffer(portrait.POR_PORTIMAGE)) {
       const base64 = portrait.POR_PORTIMAGE.toString('base64');
       // Determine image type (default to jpeg, but could be png, etc.)
       return `data:image/jpeg;base64,${base64}`;

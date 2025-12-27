@@ -2,10 +2,12 @@ import { useAuthStore } from '../../store/authStore';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../common/Button';
 import { ProfilePicture } from '../common/ProfilePicture';
+import { usePortrait } from '../../hooks/usePortrait';
 
 export const Header = () => {
   const { user } = useAuthStore();
   const { logout } = useAuth();
+  const { imageUrl } = usePortrait(user?.USE_PAYNUMBER);
 
   return (
     <header className="fixed top-0 left-64 right-0 bg-white shadow-sm border-b border-gray-200 z-40 h-16">
@@ -22,6 +24,7 @@ export const Header = () => {
               <div className="flex items-center space-x-3">
                 <ProfilePicture
                   name={user.USE_PAYNUMBER}
+                  imageUrl={imageUrl || undefined}
                   size="md"
                   showStatus
                   status="online"
