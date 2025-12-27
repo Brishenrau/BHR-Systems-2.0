@@ -42,7 +42,7 @@ export class ModuleRepository extends BaseRepository<BHR_MODULCODE> {
         MOD_MODFYOPER,
         MOD_MODFYDATE
       FROM ${this.getFullTableName()}
-      WHERE MOD_MODULCODE = :moduleCode
+      WHERE MOD_MODULCODE = :1
         AND MOD_STATUSFLG = 'Y'
     `;
     

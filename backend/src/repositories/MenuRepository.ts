@@ -29,7 +29,11 @@ export class MenuRepository extends BaseRepository<BHR_MENHEADER> {
    * Get programs for a specific module
    */
   async getProgramsByModule(moduleCode: string): Promise<BHR_PGRAMCODE[]> {
-    const sql = `
+    // Trim the module code
+    const trimmedModuleCode = moduleCode.trim();
+    
+    // Get all programs first, then filter (for debugging and to ensure we get data)
+    const allProgramsSql = `
       SELECT 
         PGR_PGRAMCODE,
         PGR_MODULCODE,
@@ -41,12 +45,17 @@ export class MenuRepository extends BaseRepository<BHR_MENHEADER> {
         PGR_MODFYOPER,
         PGR_MODFYDATE
       FROM SADM.BHR_PGRAMCODE
-      WHERE PGR_MODULCODE = :moduleCode
       ORDER BY PGR_MENNUMBER, PGR_SEQUENCED
     `;
     
-    // Use object for named bind parameters
-    return await executeQuery<BHR_PGRAMCODE>(sql, { moduleCode });
+    const allPrograms = await executeQuery<BHR_PGRAMCODE>(allProgramsSql);
+    
+    // Filter by module code (case-insensitive)
+    const filtered = allPrograms.filter(
+      p => p.PGR_MODULCODE?.trim().toUpperCase() === trimmedModuleCode.toUpperCase()
+    );
+    
+    return filtered;
   }
 
   /**
