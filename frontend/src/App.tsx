@@ -5,6 +5,7 @@ import { Dashboard } from './pages/Dashboard';
 import { ModulePage } from './pages/ModulePage';
 import { ModuleCodePage } from './pages/ModuleCodePage';
 import { ProgramCodePage } from './pages/ProgramCodePage';
+import { MenuHeaderPage } from './pages/MenuHeaderPage';
 import { ProgramPage } from './pages/ProgramPage';
 import { UserAccessPage } from './pages/UserAccessPage';
 import { NotFound } from './pages/NotFound';
@@ -29,6 +30,11 @@ const ProgramRoute = () => {
   // PENYELENGGARAAN ATURCARA program
   if (programCode === 'BHR_PGRAMCODE') {
     return <ProgramCodePage />;
+  }
+  
+  // KOD TAJUK MENU program
+  if (programCode === 'BHR_MENHEADER') {
+    return <MenuHeaderPage />;
   }
   
   // All other programs go to ProgramPage
