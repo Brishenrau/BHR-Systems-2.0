@@ -1,6 +1,13 @@
 import apiClient from './api';
 import type { MenuItem, ProgramItem } from '../types/database.types';
 
+// API response wrapper type (backend wraps responses)
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
 // All 34 standalone menus (flat list, no grouping)
 const allMenus: ProgramItem[] = [
   { programCode: 'BELANJAWAN', moduleCode: 'ACC', programName: 'BELANJAWAN', sequence: 1 },
@@ -56,9 +63,9 @@ export const menuService = {
       }));
     }
     
-    // Production: Call actual API
-    const response = await apiClient.get<MenuItem[]>('/menu/user-menu');
-    return response.data;
+    // Production: Call actual API (backend wraps response in { success, data, message })
+    const response = await apiClient.get<ApiResponse<MenuItem[]>>('/menu/user-menu');
+    return response.data.data;
   },
 
   // Get all programs (for admin)
@@ -69,7 +76,7 @@ export const menuService = {
       return allMenus;
     }
     
-    const response = await apiClient.get<ProgramItem[]>('/menu/programs');
-    return response.data;
+    const response = await apiClient.get<ApiResponse<ProgramItem[]>>('/menu/programs');
+    return response.data.data;
   },
 };

@@ -1,8 +1,9 @@
 // SADM Schema Types - Update these when database changes
+// Note: USE_PASSWORDS is intentionally NOT included (never send to frontend)
 export interface BHR_PAYNUMBER {
   USE_PAYNUMBER: string;
   USE_PTJPKCODE: string;
-  USE_SHORTNAME: number;
+  USE_SHORTNAME: string;           // Changed from number to string (VARCHAR2)
   USE_USERLEVEL: string;
   USE_STATUSFLG: string;
   USE_ENTRYOPER: string;

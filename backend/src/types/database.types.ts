@@ -1,12 +1,13 @@
-// SADM Schema Types - Matching frontend types
+// SADM Schema Types - Matching Oracle table structure
 export interface BHR_PAYNUMBER {
   USE_PAYNUMBER: string;
+  USE_PASSWORDS: string;           // Password field (plain text for now)
   USE_PTJPKCODE: string;
-  USE_SHORTNAME: number;
-  USE_USERLEVEL: string;
-  USE_STATUSFLG: string;
+  USE_SHORTNAME: string;           // Changed from number to string (VARCHAR2)
+  USE_USERLEVEL: string | null;
+  USE_STATUSFLG: string | null;
   USE_ENTRYOPER: string;
-  USE_ENTRYDATE: Date | string;
+  USE_ENTRYDATE: Date | string | null;
   USE_MODFYOPER?: string | null;
   USE_MODFYDATE?: Date | string | null;
 }

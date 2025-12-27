@@ -2,18 +2,25 @@ import apiClient from './api';
 import type { BHR_PAYNUMBER } from '../types/database.types';
 import type { LoginCredentials, AuthResponse } from '../types/auth.types';
 
+// API response wrapper type (backend wraps responses)
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     // Development mode: Allow login without backend for testing
     // Remove this when backend is ready
-    const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true' || !import.meta.env.VITE_API_BASE_URL;
+    const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
     
     if (DEV_MODE) {
       // Mock successful login for development
       const mockUser: BHR_PAYNUMBER = {
         USE_PAYNUMBER: credentials.payNumber,
         USE_PTJPKCODE: '000000',
-        USE_SHORTNAME: 0,
+        USE_SHORTNAME: 'Test User',
         USE_USERLEVEL: 'U',
         USE_STATUSFLG: 'Y',
         USE_ENTRYOPER: 'SYSTEM',
@@ -30,12 +37,14 @@ export const authService = {
       };
     }
     
-    // Production: Call actual API
-    const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
-    if (response.data.token) {
-      localStorage.setItem('authToken', response.data.token);
+    // Production: Call actual API (backend wraps response in { success, data, message })
+    const response = await apiClient.post<ApiResponse<AuthResponse>>('/auth/login', credentials);
+    
+    if (response.data.success && response.data.data.token) {
+      localStorage.setItem('authToken', response.data.data.token);
     }
-    return response.data;
+    
+    return response.data.data;
   },
 
   async logout(): Promise<void> {
@@ -53,8 +62,8 @@ export const authService = {
   },
 
   async getCurrentUser(): Promise<BHR_PAYNUMBER> {
-    const response = await apiClient.get<BHR_PAYNUMBER>('/auth/me');
-    return response.data;
+    const response = await apiClient.get<ApiResponse<BHR_PAYNUMBER>>('/auth/me');
+    return response.data.data;
   },
 
   isAuthenticated(): boolean {

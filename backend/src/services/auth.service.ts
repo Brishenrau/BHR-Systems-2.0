@@ -14,20 +14,18 @@ export class AuthService {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const { payNumber, password } = credentials;
 
-    // Find active user
+    // Find active user (includes password field)
     const user = await this.userRepository.findActiveByPayNumber(payNumber);
     if (!user) {
       throw new Error('Invalid pay number or user is inactive');
     }
 
-    // TODO: Implement password verification
-    // For now, we'll skip password check since the schema doesn't show a password field
-    // You may need to add password verification logic here
-    // Example:
-    // const isValidPassword = await this.verifyPassword(payNumber, password);
-    // if (!isValidPassword) {
-    //   throw new Error('Invalid password');
-    // }
+    // Verify password (plain text comparison for now)
+    // TODO: Consider migrating to hashed passwords for better security
+    const isValidPassword = user.USE_PASSWORDS === password;
+    if (!isValidPassword) {
+      throw new Error('Invalid password');
+    }
 
     // Get user access modules
     const access = await this.accessRepository.findByPayNumber(payNumber);
@@ -36,7 +34,7 @@ export class AuthService {
     // Generate JWT token
     const payload: JwtPayload = {
       payNumber: user.USE_PAYNUMBER,
-      userLevel: user.USE_USERLEVEL,
+      userLevel: user.USE_USERLEVEL || 'U',
     };
 
     const token = jwt.sign(
@@ -84,7 +82,7 @@ export class AuthService {
   }
 
   /**
-   * Format user response (remove sensitive data if needed)
+   * Format user response (NEVER include password!)
    */
   private formatUserResponse(user: BHR_PAYNUMBER): any {
     return {
@@ -97,6 +95,7 @@ export class AuthService {
       USE_ENTRYDATE: user.USE_ENTRYDATE,
       USE_MODFYOPER: user.USE_MODFYOPER,
       USE_MODFYDATE: user.USE_MODFYDATE,
+      // NOTE: USE_PASSWORDS is intentionally NOT included for security
     };
   }
 }

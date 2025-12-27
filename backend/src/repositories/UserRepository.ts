@@ -6,12 +6,13 @@ export class UserRepository extends BaseRepository<BHR_PAYNUMBER> {
   protected schemaName = 'SADM';
 
   /**
-   * Find user by pay number
+   * Find user by pay number (includes password for auth)
    */
   async findByPayNumber(payNumber: string): Promise<BHR_PAYNUMBER | null> {
     const sql = `
       SELECT 
         USE_PAYNUMBER,
+        USE_PASSWORDS,
         USE_PTJPKCODE,
         USE_SHORTNAME,
         USE_USERLEVEL,
@@ -28,12 +29,13 @@ export class UserRepository extends BaseRepository<BHR_PAYNUMBER> {
   }
 
   /**
-   * Find active user by pay number
+   * Find active user by pay number (includes password for auth)
    */
   async findActiveByPayNumber(payNumber: string): Promise<BHR_PAYNUMBER | null> {
     const sql = `
       SELECT 
         USE_PAYNUMBER,
+        USE_PASSWORDS,
         USE_PTJPKCODE,
         USE_SHORTNAME,
         USE_USERLEVEL,
