@@ -12,7 +12,7 @@ export class MenuService {
    * Check if user has access to a module based on access string
    * @param moduleSequence - MOD_MODULSIRI (1-based)
    * @param accessString - ACC_MODACCESS (60 char string)
-   * @returns true if user has access (Y or T at position)
+   * @returns true if user has access (Y = access, T = no access)
    */
   private hasModuleAccess(moduleSequence: number, accessString: string): boolean {
     // Access string is 0-indexed, module sequence is 1-based
@@ -24,8 +24,8 @@ export class MenuService {
     }
     
     const accessChar = accessString.charAt(position).toUpperCase();
-    // Y or T means access granted
-    return accessChar === 'Y' || accessChar === 'T';
+    // Y = access granted, T = no access
+    return accessChar === 'Y';
   }
 
   /**
