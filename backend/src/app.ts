@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { initializeDatabase, testConnection, closePool } from './config/database';
 import authRoutes from './routes/auth.routes';
 import menuRoutes from './routes/menu.routes';
+import moduleRoutes from './routes/module.routes';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 
 // Load environment variables
@@ -38,6 +39,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/menu', menuRoutes);
+app.use('/api/v1/modules', moduleRoutes);
 
 // Error handling
 app.use(notFoundHandler);

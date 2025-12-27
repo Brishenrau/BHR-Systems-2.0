@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useModules } from '../hooks/useModules';
 import { menuService } from '../services/menu.service';
 import { useEffect, useState } from 'react';
@@ -100,9 +100,12 @@ export const ModulePage = () => {
                             <span className="text-cyan-600 font-semibold mr-2 mt-0.5 min-w-[1.5rem]">
                               {index + 1}.
                             </span>
-                            <span className="text-gray-700 group-hover:text-cyan-700 font-medium flex-1">
+                            <Link
+                              to={`/module/${moduleCode}/${program.programCode}`}
+                              className="text-gray-700 group-hover:text-cyan-700 font-medium flex-1 hover:underline cursor-pointer"
+                            >
                               {program.programName}
-                            </span>
+                            </Link>
                           </li>
                         ))}
                       </ol>

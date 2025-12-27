@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { ModulePage } from './pages/ModulePage';
+import { ModuleCodePage } from './pages/ModuleCodePage';
 import { NotFound } from './pages/NotFound';
 import { Layout } from './components/layout/Layout';
 import { ProtectedRoute } from './components/features/auth/ProtectedRoute';
@@ -33,6 +34,7 @@ function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="module/:moduleCode" element={<ModulePage />} />
+            <Route path="module/:moduleCode/:programCode" element={<ModuleCodePage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
