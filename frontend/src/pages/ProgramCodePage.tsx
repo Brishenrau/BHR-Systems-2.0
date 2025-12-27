@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { programService } from '../services/program.service';
 import { moduleService } from '../services/module.service';
-import { menuService } from '../services/menu.service';
+import { menuHeaderService } from '../services/menuHeader.service';
 import type { ApiError } from '../types/api.types';
 import type { BHR_PGRAMCODE, BHR_MODULCODE } from '../types/database.types';
 
@@ -32,17 +32,17 @@ export const ProgramCodePage = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [allModules, allMenus] = await Promise.all([
+        const [allModules, allMenuHeaders] = await Promise.all([
           moduleService.getAllModules(),
-          menuService.getUserMenu(),
+          menuHeaderService.getAllMenuHeaders(), // Get ALL menu headers, not just ones with programs
         ]);
         
         setModules(allModules.filter(m => m.MOD_STATUSFLG === 'Y'));
         
-        // Extract menu headers from menu structure
-        const headers: MenuHeader[] = allMenus.map(menu => ({
-          menuNumber: menu.menuNumber,
-          menuHeader: menu.menuHeader,
+        // Convert BHR_MENHEADER to MenuHeader format
+        const headers: MenuHeader[] = allMenuHeaders.map(menuHeader => ({
+          menuNumber: menuHeader.MEN_MENNUMBER,
+          menuHeader: menuHeader.MEN_MENHEADER,
         }));
         setMenuHeaders(headers);
       } catch (err) {
