@@ -305,8 +305,7 @@ export const StatementPage = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {sortedStatements.map((stmt, index) => {
-                    const sortedIndex = sortedStatements.length - 1 - index; // Reverse index for balance calculation
-                    const balance = balances.get(sortedIndex) || 0;
+                    const balance = balances.get(index) || 0;
                     const isNegative = balance < 0;
                     
                     return (

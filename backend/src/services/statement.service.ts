@@ -70,7 +70,7 @@ export class StatementService {
       }
     });
 
-    const totalBalance = totalCredit - totalDebit;
+    const totalBalance = totalDebit - totalCredit;
 
     return {
       statements: statementsWithDesc,
