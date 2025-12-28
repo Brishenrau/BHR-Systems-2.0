@@ -151,20 +151,44 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
         return null;
       }
 
-      console.log(`Property details found for account ${nomBakaun}:`, {
-        accountNumber: result.accountNumber,
-        ownerName: result.ownerName,
-        propertyAddress: result.propertyAddress,
-        hasData: Object.keys(result).length > 0
+      // Log the raw result to see what columns are actually returned
+      console.log(`Raw property details result for account ${nomBakaun}:`, JSON.stringify(result, null, 2));
+      console.log(`Result keys:`, Object.keys(result));
+      
+      // Map the result to ensure we have the right field names
+      // Oracle might return column names in uppercase or with different casing
+      const mappedResult: any = {
+        accountNumber: result.ACCOUNTNUMBER || result.accountNumber || result.PEM_NOMBAKAUN,
+        propertyAddress: result.PROPERTYADDRESS || result.propertyAddress || result.PEG_ALAMATHRT,
+        lotNumber: result.LOTNUMBER || result.lotNumber || result.PEG_NOMBORLOT,
+        xCoordinate: result.XCOORDINATE || result.xCoordinate || result.PEG_XCORDINAT,
+        yCoordinate: result.YCOORDINATE || result.yCoordinate || result.PEG_YCORDINAT,
+        percentage: result.PERCENTAGE || result.percentage || result.PEG_PERATUSAN,
+        newValue: result.NEWVALUE || result.newValue || result.PEG_NILAIBARU,
+        ratePerYear: result.RATEPERYEAR || result.ratePerYear || result.PEG_KADARTHUN,
+        newTax: result.NEWTAX || result.newTax || result.PEG_CUKAIBARU,
+        ownerName: result.OWNERNAME || result.ownerName || result.PEM_NAMAMILIK,
+        mailingAddress: result.MAILINGADDRESS || result.mailingAddress || result.PEM_ALAMATSRT,
+        laneCode: result.LANECODE || result.laneCode || result.PEG_LORONGKOD,
+        roadCode: result.ROADCODE || result.roadCode || result.PEG_JALANCODE,
+        ownerType: result.OWNERTYPE || result.ownerType || result.MIL_MILIKNAME,
+        race: result.RACE || result.race || result.RAC_RACESNAME,
+      };
+
+      console.log(`Mapped property details for account ${nomBakaun}:`, {
+        accountNumber: mappedResult.accountNumber,
+        ownerName: mappedResult.ownerName,
+        propertyAddress: mappedResult.propertyAddress,
+        hasData: Object.keys(mappedResult).length > 0
       });
 
       // Format CTA calculation if values are available
-      if (result.newValue && result.ratePerYear && result.percentage) {
-        const cta = (result.newValue * (result.ratePerYear / 100) * (result.percentage / 100)).toFixed(2);
-        result.ctaCalculation = `${result.newValue.toFixed(2)} X ${result.ratePerYear.toFixed(4)}% X ${result.percentage.toFixed(2)}% = ${cta}`;
+      if (mappedResult.newValue && mappedResult.ratePerYear && mappedResult.percentage) {
+        const cta = (mappedResult.newValue * (mappedResult.ratePerYear / 100) * (mappedResult.percentage / 100)).toFixed(2);
+        mappedResult.ctaCalculation = `${mappedResult.newValue.toFixed(2)} X ${mappedResult.ratePerYear.toFixed(4)}% X ${mappedResult.percentage.toFixed(2)}% = ${cta}`;
       }
       
-      return result;
+      return mappedResult;
     } catch (error: any) {
       // If table doesn't exist, return null gracefully instead of crashing
       if (error.errorNum === 942) { // ORA-00942: table or view does not exist
