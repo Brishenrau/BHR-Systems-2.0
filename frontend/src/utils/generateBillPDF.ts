@@ -258,9 +258,35 @@ export const generateBillPDF = async (
     yPos += 3.5;
   });
 
-  // Note below account details
+  // Note below account details - brackets black, text red
   doc.setFontSize(7);
-  doc.text('(Sila gunakan No Akaun sebagai rujukan utama untuk bayaran secara Online)', rightColX, rightY, { maxWidth: 70 });
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(0, 0, 0); // Black for opening bracket
+  doc.text('(', rightColX, rightY);
+  
+  const noteText = 'Sila gunakan No Akaun sebagai rujukan utama untuk bayaran secara Online';
+  const openingBracketWidth = doc.getTextWidth('(');
+  const textStartX = rightColX + openingBracketWidth;
+  
+  // Split text to fit maxWidth
+  const noteLines = doc.splitTextToSize(noteText, 70);
+  let currentY = rightY;
+  
+  noteLines.forEach((line: string, index: number) => {
+    doc.setTextColor(255, 0, 0); // Bright red for text
+    doc.text(line, textStartX, currentY);
+    if (index < noteLines.length - 1) {
+      currentY += 3.5; // Line spacing
+    }
+  });
+  
+  // Closing bracket
+  const lastLineWidth = doc.getTextWidth(noteLines[noteLines.length - 1]);
+  doc.setTextColor(0, 0, 0); // Black for closing bracket
+  doc.text(')', textStartX + lastLineWidth, rightY + (noteLines.length - 1) * 3.5);
+  
+  // Reset text color to black
+  doc.setTextColor(0, 0, 0);
 
   yPos = Math.max(yPos, rightY + 7) + 5;
 
@@ -406,10 +432,44 @@ export const generateBillPDF = async (
   // Get total pages after table is drawn
   const totalPages = (doc as any).internal.getNumberOfPages();
 
-  // Print info at bottom
+  // Get final Y position after table
   const finalY = (doc as any).lastAutoTable?.finalY || yPos + 50;
+  
+  // Add QR code section below table
+  let qrY = finalY + 10; // Gap after table
+  
+  // Text above QR code
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(0, 0, 0); // Black
+  doc.text('Sila imbas Kod QR di bawah untuk membuat pembayaran.', pageWidth / 2, qrY, { align: 'center' });
+  qrY += 8; // Gap before QR code
+  
+  // Load and add QR code image
+  try {
+    const qrImg = new Image();
+    qrImg.crossOrigin = 'anonymous';
+    qrImg.src = '/QRCPBTPAY.jpg';
+    await new Promise<void>((resolve, reject) => {
+      qrImg.onload = () => {
+        const qrSize = 40; // QR code size in mm
+        const qrX = pageWidth / 2 - qrSize / 2; // Center the QR code
+        doc.addImage(qrImg, 'JPEG', qrX, qrY, qrSize, qrSize);
+        resolve();
+      };
+      qrImg.onerror = () => reject(new Error('QR code failed'));
+      setTimeout(() => reject(new Error('Timeout')), 3000);
+    });
+    qrY += 45; // Space after QR code
+  } catch (error) {
+    console.warn('QR code not loaded');
+    qrY += 10; // Add some space even if QR code fails
+  }
+
+  // Print info at bottom
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
+  doc.setTextColor(0, 0, 0); // Black
   const printInfo = `Dicetak oleh: ${propertyDetails?.ownerName || 'System'} pada ${formatDate(new Date())} ${new Date().toLocaleTimeString('en-GB')}`;
   doc.text(printInfo, margin, pageHeight - 10);
 
