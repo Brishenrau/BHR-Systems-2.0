@@ -51,6 +51,7 @@ export const generateStatementPDF = async (
     await new Promise<void>((resolve, reject) => {
       watermarkImg.onload = () => {
         // Add watermark as background (semi-transparent)
+        // Note: jsPDF doesn't support opacity directly, but we can use a lighter image or adjust
         doc.addImage(watermarkImg, 'JPEG', pageWidth / 2 - 50, pageHeight / 2 - 50, 100, 100, undefined, 'FAST');
         resolve();
       };
@@ -155,13 +156,6 @@ export const generateStatementPDF = async (
   doc.text(mailingLines, leftColX + 40, leftY);
   leftY += mailingLines.length * 5 + 2;
 
-  doc.setFont('helvetica', 'bold');
-  doc.text('Alamat Harta:', leftColX, leftY);
-  doc.setFont('helvetica', 'normal');
-  const propertyAddress = propertyDetails?.propertyAddress || '';
-  const propertyLines = doc.splitTextToSize(propertyAddress, 80);
-  doc.text(propertyLines, leftColX + 40, leftY);
-
   // Right Column - Assessment Details
   let rightY = yPos;
   doc.setFont('helvetica', 'bold');
@@ -203,6 +197,16 @@ export const generateStatementPDF = async (
     rightY
   );
 
+  // Alamat Harta section (below owner/assessment details)
+  yPos = Math.max(leftY, rightY) + 8;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Alamat Harta:', leftColX, yPos);
+  doc.setFont('helvetica', 'normal');
+  const propertyAddress = propertyDetails?.propertyAddress || '';
+  const propertyLines = doc.splitTextToSize(propertyAddress, 80);
+  doc.text(propertyLines, leftColX + 40, yPos);
+  yPos += propertyLines.length * 5 + 8;
+
   // Calculate ending balance date (last transaction date or current date)
   const lastTransaction = data.statements[data.statements.length - 1];
   const endingBalanceDate = lastTransaction?.STA_TARIKHTRX
@@ -210,7 +214,7 @@ export const generateStatementPDF = async (
     : new Date().toLocaleDateString('en-GB');
 
   // Ending Balance
-  yPos = Math.max(leftY, rightY) + 10;
+  yPos += 5;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.text(`Baki Akhir: ${endingBalanceDate}`, margin, yPos);
