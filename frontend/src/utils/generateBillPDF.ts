@@ -213,8 +213,9 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text('MAKLUMAT PEMILIK', margin + 3, yPos + 4);
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 10; // Increased gap after header before data
+  yPos += 12; // Increased gap after header before data
 
+  // Standardized font size
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
 
@@ -223,35 +224,21 @@ export const generateBillPDF = async (
   const mailingAddress = propertyDetails?.mailingAddress || '';
   const mailingLines = doc.splitTextToSize(mailingAddress, 70);
 
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
+  const startY = yPos; // Save starting Y position for alignment
+  
+  // Owner Name on left
   doc.text(ownerName, margin, yPos);
-  yPos += 4; // Reduced spacing
-  mailingLines.forEach((line: string) => {
-    doc.text(line, margin, yPos);
-    yPos += 3.5; // Reduced spacing
-  });
-
-  // Move yPos down after owner information
-  yPos += 5; // Gap after owner information
-
-  // Right side - Account Details (positioned lower, not part of Maklumat Pemilik)
+  
+  // Right side - Account Details aligned side by side with name
   const rightColX = pageWidth / 2 + 20;
-  // Position No.Akaun lower, after the owner information
-  let rightY = yPos - 5; // Start from after owner info
-
-  doc.setFontSize(9);
+  let rightY = startY; // Align with owner name
+  
   doc.setFont('helvetica', 'bold');
   doc.text('No. Akaun:', rightColX, rightY);
   doc.setFont('helvetica', 'normal');
   doc.text(formattedAccountNumber, rightColX + 28, rightY);
   rightY += 5;
 
-  doc.setFontSize(7);
-  doc.text('(Sila gunakan No Akaun sebagai rujukan utama untuk bayaran secara Online)', rightColX, rightY, { maxWidth: 70 });
-  rightY += 7;
-
-  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   doc.text('Tarikh Bil:', rightColX, rightY);
   doc.setFont('helvetica', 'normal');
@@ -262,8 +249,20 @@ export const generateBillPDF = async (
   doc.text('Bagi Tempoh:', rightColX, rightY);
   doc.setFont('helvetica', 'normal');
   doc.text(`Tahun ${billYear}`, rightColX + 28, rightY);
+  rightY += 5;
 
-  yPos = Math.max(yPos, rightY + 15) + 5;
+  // Address lines below name
+  yPos += 4;
+  mailingLines.forEach((line: string) => {
+    doc.text(line, margin, yPos);
+    yPos += 3.5;
+  });
+
+  // Note below account details
+  doc.setFontSize(7);
+  doc.text('(Sila gunakan No Akaun sebagai rujukan utama untuk bayaran secara Online)', rightColX, rightY, { maxWidth: 70 });
+
+  yPos = Math.max(yPos, rightY + 7) + 5;
 
   // MAKLUMAT HARTA/PEGANGAN Section (with green header bar)
   doc.setFillColor(0, 128, 0); // Green color
@@ -273,13 +272,16 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text('MAKLUMAT HARTA/PEGANGAN', margin + 3, yPos + 4);
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 10; // Increased gap after header before data
+  yPos += 12; // Increased gap after header before data
 
+  // Standardized font size
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
 
   // Left side - Property Address
   const propertyAddress = propertyDetails?.propertyAddress || '';
+  const propertyStartY = yPos; // Save starting Y position for alignment
+  
   doc.setFont('helvetica', 'bold');
   doc.text('Alamat Harta:', margin, yPos);
   doc.setFont('helvetica', 'normal');
@@ -287,11 +289,11 @@ export const generateBillPDF = async (
   const propertyLines = doc.splitTextToSize(propertyAddress, 70);
   propertyLines.forEach((line: string) => {
     doc.text(line, margin, yPos);
-    yPos += 3.5; // Reduced spacing
+    yPos += 3.5;
   });
 
-  // Right side - Property Valuation
-  rightY = yPos - (propertyLines.length * 4) - 5;
+  // Right side - Property Valuation aligned with "Alamat Harta:" label
+  rightY = propertyStartY;
   doc.setFont('helvetica', 'bold');
   doc.text('Nilai Tambah:', rightColX, rightY);
   doc.setFont('helvetica', 'normal');
@@ -321,7 +323,7 @@ export const generateBillPDF = async (
     rightY
   );
 
-  yPos = Math.max(yPos, rightY) + 6; // Reduced spacing
+  yPos = Math.max(yPos, rightY) + 6;
 
   // MAKLUMAT BAYARAN Section (with green header bar)
   doc.setFillColor(0, 128, 0); // Green color
@@ -331,15 +333,16 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text('MAKLUMAT BAYARAN', margin + 3, yPos + 4);
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 10; // Increased gap after header before data
+  yPos += 12; // Increased gap after header before data
 
-  // Payment Due Date (in red)
+  // Standardized font size
   doc.setFontSize(9);
+  // Payment Due Date (in red)
   doc.setTextColor(255, 0, 0); // Red color
   doc.setFont('helvetica', 'bold');
   doc.text(`Bayar Pada/Sebelum: ${formatDate(dueDate)}`, margin, yPos);
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 5; // Reduced spacing
+  yPos += 5;
 
   // Payment Table
   const tableData = billRows.map((row) => [
@@ -375,11 +378,12 @@ export const generateBillPDF = async (
       lineWidth: 0.1,
     },
     columnStyles: {
-      0: { cellWidth: 80 }, // Keterangan Bil
-      1: { cellWidth: 40, halign: 'right' }, // Jan-Jun
-      2: { cellWidth: 40, halign: 'right' }, // Tahun
+      0: { cellWidth: 100 }, // Keterangan Bil - increased
+      1: { cellWidth: 50, halign: 'right' }, // Jan-Jun - increased
+      2: { cellWidth: 50, halign: 'right' }, // Tahun - increased
     },
     margin: { left: margin, right: margin },
+    tableWidth: pageWidth - 2 * margin, // Match green header line width
     styles: {
       cellPadding: 2, // Reduced padding
     },
@@ -404,12 +408,7 @@ export const generateBillPDF = async (
   const printInfo = `Dicetak oleh: ${propertyDetails?.ownerName || 'System'} pada ${formatDate(new Date())} ${new Date().toLocaleTimeString('en-GB')}`;
   doc.text(printInfo, margin, pageHeight - 10);
 
-  // Update page numbers on all pages
-  for (let i = 1; i <= totalPages; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.text(`M/Surat: ${i} / ${totalPages}`, pageWidth - margin, 8, { align: 'right' });
-  }
+  // Page numbers removed as requested
 
   // Return PDF as blob URL instead of saving
   const pdfBlob = doc.output('blob');
