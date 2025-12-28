@@ -1,4 +1,6 @@
 import PDFDocument from 'pdfkit';
+import fs from 'fs';
+import path from 'path';
 import type { StatementResponse } from '../services/statement.service';
 
 interface PropertyDetails {
@@ -19,7 +21,7 @@ export async function generateStatementPDFBuffer(
   data: StatementResponse,
   propertyDetails: PropertyDetails | null
 ): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const doc = new PDFDocument({
       size: 'A4',
       margin: 50,
@@ -34,47 +36,82 @@ export async function generateStatementPDFBuffer(
     });
     doc.on('error', reject);
 
-    // Helper function to format currency
-    const formatCurrency = (amount: number): string => {
-      return amount.toFixed(2);
-    };
+    try {
+      // Helper function to format currency
+      const formatCurrency = (amount: number): string => {
+        return amount.toFixed(2);
+      };
 
-    // Helper function to format date
-    const formatDate = (date: Date | string | null | undefined): string => {
-      if (!date) return '';
-      const d = typeof date === 'string' ? new Date(date) : date;
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      return `${day}-${month}-${year}`;
-    };
+      // Helper function to format date
+      const formatDate = (date: Date | string | null | undefined): string => {
+        if (!date) return '';
+        const d = typeof date === 'string' ? new Date(date) : date;
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}-${month}-${year}`;
+      };
 
-    // Council Header
-    doc.fontSize(16).font('Helvetica-Bold');
-    doc.text('MAJLIS PERBANDARAN KULIM', { align: 'center' });
-    doc.moveDown(0.5);
+      const pageWidth = doc.page.width;
+      const pageHeight = doc.page.height;
+      const margin = 50;
+      let yPos = margin;
 
-    doc.fontSize(10).font('Helvetica');
-    doc.text('NO 1, LEBUH BANDAR 2, BANDAR PUTRA, 09000 KULIM', { align: 'center' });
-    doc.moveDown(1);
+      // Try to load watermark (if available)
+      try {
+        const watermarkPath = path.join(process.cwd(), '..', 'frontend', 'public', 'WATERMARK.jpg');
+        if (fs.existsSync(watermarkPath)) {
+          doc.image(watermarkPath, pageWidth / 2 - 50, pageHeight / 2 - 50, { width: 100, height: 100, opacity: 0.3 });
+        }
+      } catch (error) {
+        console.warn('Could not load watermark:', error);
+      }
 
-    // Contact Information (right side)
-    doc.fontSize(9);
-    doc.text('No Tel: +604-4325225', { align: 'right' });
-    doc.text('No Faks: +604-4325229', { align: 'right' });
-    doc.text('E-mail: info@mpkk.gov.my', { align: 'right' });
-    doc.text('www.mpkk.gov.my', { align: 'right' });
-    doc.moveDown(1);
+      // Try to load logo (if available)
+      try {
+        const logoPath = path.join(process.cwd(), '..', 'frontend', 'public', 'MPKKJAWIS.jpg');
+        if (fs.existsSync(logoPath)) {
+          doc.image(logoPath, margin, yPos, { width: 20, height: 20 });
+        }
+      } catch (error) {
+        console.warn('Could not load logo:', error);
+      }
 
-    // Document Title
-    doc.fontSize(14).font('Helvetica-Bold');
-    doc.text('PENYATA AKAUN CUKAI TAKSIRAN', { align: 'center' });
-    doc.moveDown(1);
+      // Council Header
+      doc.fontSize(16).font('Helvetica-Bold');
+      doc.text('MAJLIS PERBANDARAN KULIM', { align: 'center', y: yPos + 10 });
+      yPos += 20;
 
-    // Section Header
-    doc.fontSize(11).font('Helvetica-Bold');
-    doc.text('MAKLUMAT PEMILIK dan HARTA PEGANGAN');
-    doc.moveDown(0.8);
+      doc.fontSize(10).font('Helvetica');
+      doc.text('NO 1, LEBUH BANDAR 2, BANDAR PUTRA, 09000 KULIM', { align: 'center' });
+      yPos += 8;
+
+      // Portal
+      doc.fontSize(9);
+      doc.text('Portal Rasmi: www.mpkk.gov.my', { align: 'center' });
+      yPos += 8;
+
+      // Contact Information (right side)
+      doc.fontSize(9);
+      doc.text('No Tel: +604-4325225', margin, margin + 5, { align: 'right' });
+      doc.text('No Faks: +604-4325229', margin, margin + 15, { align: 'right' });
+      doc.text('E-mail: info@mpkk.gov.my', margin, margin + 25, { align: 'right' });
+
+      yPos += 5;
+
+      // Document Title (green banner)
+      doc.rect(margin, yPos, pageWidth - 2 * margin, 8).fill([0, 128, 0]);
+      doc.fillColor('white');
+      doc.fontSize(14).font('Helvetica-Bold');
+      doc.text('PENYATA AKAUN CUKAI TAKSIRAN', { align: 'center', y: yPos + 2 });
+      doc.fillColor('black');
+      yPos += 15;
+
+      // Section Header (with light green background)
+      doc.rect(margin, yPos - 3, pageWidth - 2 * margin, 6).fill([240, 255, 240]);
+      doc.fontSize(11).font('Helvetica-Bold');
+      doc.text('MAKLUMAT PEMILIK dan HARTA PEGANGAN', margin, yPos);
+      yPos += 12;
 
     // Owner and Property Details
     doc.fontSize(9).font('Helvetica');
@@ -274,11 +311,18 @@ export async function generateStatementPDFBuffer(
     doc.rect(tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4], currentY, colWidths[5], rowHeight).stroke();
     doc.text(totalBalance, tableLeft + colWidths[0] + colWidths[1] + colWidths[2] + colWidths[3] + colWidths[4] + 5, currentY + 5, { align: 'right', width: colWidths[5] - 10 });
 
-    // Page number
-    doc.fontSize(8).font('Helvetica');
-    doc.text('M/Surat: 1 / 1', doc.page.width - 50, doc.page.height - 30, { align: 'right' });
+      // Page number
+      doc.fontSize(8).font('Helvetica');
+      doc.text('M/Surat: 1 / 1', pageWidth - margin, pageHeight - 30, { align: 'right' });
 
-    doc.end();
+      // Print info at bottom
+      doc.fontSize(7);
+      doc.text(`Dicetak pada ${formatDate(new Date())} ${new Date().toLocaleTimeString('en-GB')}`, margin, pageHeight - 30);
+
+      doc.end();
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 

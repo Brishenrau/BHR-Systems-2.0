@@ -411,7 +411,14 @@ export const StatementPage = () => {
         {data && (
           <div className="mb-4 flex justify-end gap-2">
             <button
-              onClick={() => generateStatementPDF(data, propertyDetails)}
+              onClick={async () => {
+                try {
+                  await generateStatementPDF(data, propertyDetails);
+                } catch (error) {
+                  console.error('Error generating statement PDF:', error);
+                  setError('Failed to generate statement PDF. Please try again.');
+                }
+              }}
               className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               title="Generate and download Statement PDF"
             >

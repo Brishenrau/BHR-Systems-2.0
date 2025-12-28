@@ -180,13 +180,15 @@ export const generateBillPDF = async (
   doc.setTextColor(0, 0, 0); // Reset to black
   yPos += 12;
 
-  // MAKLUMAT PEMILIK Section (with light green background)
-  doc.setFillColor(240, 255, 240); // Light green
-  doc.rect(margin, yPos - 3, pageWidth - 2 * margin, 6, 'F');
+  // MAKLUMAT PEMILIK Section (with green header bar)
+  doc.setFillColor(0, 128, 0); // Green color
+  doc.rect(margin, yPos, pageWidth - 2 * margin, 6, 'F');
+  doc.setTextColor(255, 255, 255);
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('MAKLUMAT PEMILIK', margin, yPos);
-  yPos += 8;
+  doc.text('MAKLUMAT PEMILIK', margin + 3, yPos + 4);
+  doc.setTextColor(0, 0, 0); // Reset to black
+  yPos += 10;
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -256,13 +258,15 @@ export const generateBillPDF = async (
 
   yPos = Math.max(yPos, rightY + 15) + 5;
 
-  // MAKLUMAT HARTA/PEGANGAN Section (with light green background)
-  doc.setFillColor(240, 255, 240); // Light green
-  doc.rect(margin, yPos - 3, pageWidth - 2 * margin, 6, 'F');
+  // MAKLUMAT HARTA/PEGANGAN Section (with green header bar)
+  doc.setFillColor(0, 128, 0); // Green color
+  doc.rect(margin, yPos, pageWidth - 2 * margin, 6, 'F');
+  doc.setTextColor(255, 255, 255);
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('MAKLUMAT HARTA/PEGANGAN', margin, yPos);
-  yPos += 8;
+  doc.text('MAKLUMAT HARTA/PEGANGAN', margin + 3, yPos + 4);
+  doc.setTextColor(0, 0, 0); // Reset to black
+  yPos += 10;
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -312,13 +316,15 @@ export const generateBillPDF = async (
 
   yPos = Math.max(yPos, rightY) + 8;
 
-  // MAKLUMAT BAYARAN Section (with light green background)
-  doc.setFillColor(240, 255, 240); // Light green
-  doc.rect(margin, yPos - 3, pageWidth - 2 * margin, 6, 'F');
+  // MAKLUMAT BAYARAN Section (with green header bar)
+  doc.setFillColor(0, 128, 0); // Green color
+  doc.rect(margin, yPos, pageWidth - 2 * margin, 6, 'F');
+  doc.setTextColor(255, 255, 255);
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('MAKLUMAT BAYARAN', margin, yPos);
-  yPos += 8;
+  doc.text('MAKLUMAT BAYARAN', margin + 3, yPos + 4);
+  doc.setTextColor(0, 0, 0); // Reset to black
+  yPos += 10;
 
   // Payment Due Date (in red)
   doc.setFontSize(9);

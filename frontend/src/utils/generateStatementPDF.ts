@@ -13,10 +13,10 @@ interface PropertyDetails {
   newTax?: number;
 }
 
-export const generateStatementPDF = (
+export const generateStatementPDF = async (
   data: StatementResponse,
   propertyDetails: PropertyDetails | null
-): void => {
+): Promise<void> => {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -43,15 +43,55 @@ export const generateStatementPDF = (
     return `${day}-${month}-${year}`;
   };
 
+  // Load watermark first (to appear behind content)
+  try {
+    const watermarkImg = new Image();
+    watermarkImg.crossOrigin = 'anonymous';
+    watermarkImg.src = '/WATERMARK.jpg';
+    await new Promise<void>((resolve, reject) => {
+      watermarkImg.onload = () => {
+        // Add watermark as background (semi-transparent)
+        doc.addImage(watermarkImg, 'JPEG', pageWidth / 2 - 50, pageHeight / 2 - 50, 100, 100, undefined, 'FAST');
+        resolve();
+      };
+      watermarkImg.onerror = () => reject(new Error('Watermark load failed'));
+      setTimeout(() => reject(new Error('Watermark load timeout')), 3000);
+    });
+  } catch (error) {
+    console.warn('Could not load watermark:', error);
+  }
+
+  // Load and add logo image
+  try {
+    const logoImg = new Image();
+    logoImg.crossOrigin = 'anonymous';
+    logoImg.src = '/MPKKJAWIS.jpg';
+    await new Promise<void>((resolve, reject) => {
+      logoImg.onload = () => {
+        doc.addImage(logoImg, 'JPEG', margin, yPos, 20, 20);
+        resolve();
+      };
+      logoImg.onerror = () => reject(new Error('Logo load failed'));
+      setTimeout(() => reject(new Error('Logo load timeout')), 3000);
+    });
+  } catch (error) {
+    console.warn('Could not load logo image:', error);
+  }
+
   // Council Header
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text('MAJLIS PERBANDARAN KULIM', pageWidth / 2, yPos, { align: 'center' });
+  doc.text('MAJLIS PERBANDARAN KULIM', pageWidth / 2, yPos + 10, { align: 'center' });
   yPos += 8;
 
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.text('NO 1, LEBUH BANDAR 2, BANDAR PUTRA, 09000 KULIM', pageWidth / 2, yPos, { align: 'center' });
+  yPos += 5;
+
+  // Portal
+  doc.setFontSize(9);
+  doc.text('Portal Rasmi: www.mpkk.gov.my', pageWidth / 2, yPos, { align: 'center' });
   yPos += 5;
 
   // Contact Information (right side)
@@ -60,17 +100,22 @@ export const generateStatementPDF = (
   doc.text('No Tel: +604-4325225', contactX, margin + 5, { align: 'right' });
   doc.text('No Faks: +604-4325229', contactX, margin + 10, { align: 'right' });
   doc.text('E-mail: info@mpkk.gov.my', contactX, margin + 15, { align: 'right' });
-  doc.text('www.mpkk.gov.my', contactX, margin + 20, { align: 'right' });
 
-  yPos += 10;
+  yPos += 5;
 
-  // Document Title
+  // Document Title (green banner)
+  doc.setFillColor(0, 128, 0); // Green color
+  doc.rect(margin, yPos, pageWidth - 2 * margin, 8, 'F');
+  doc.setTextColor(255, 255, 255);
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text('PENYATA AKAUN CUKAI TAKSIRAN', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 10;
+  doc.text('PENYATA AKAUN CUKAI TAKSIRAN', pageWidth / 2, yPos + 5.5, { align: 'center' });
+  doc.setTextColor(0, 0, 0); // Reset to black
+  yPos += 12;
 
-  // Section Header
+  // Section Header (with light green background)
+  doc.setFillColor(240, 255, 240); // Light green
+  doc.rect(margin, yPos - 3, pageWidth - 2 * margin, 6, 'F');
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.text('MAKLUMAT PEMILIK dan HARTA PEGANGAN', margin, yPos);
@@ -165,13 +210,13 @@ export const generateStatementPDF = (
     : new Date().toLocaleDateString('en-GB');
 
   // Ending Balance
-  yPos = Math.max(leftY, rightY) + 8;
+  yPos = Math.max(leftY, rightY) + 10;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.text(`Baki Akhir: ${endingBalanceDate}`, margin, yPos);
   doc.setFont('helvetica', 'normal');
   doc.text(formatCurrency(data.totals.totalBalance), margin + 60, yPos);
-  yPos += 8;
+  yPos += 10;
 
   // Transaction Table - Calculate running balances
   let runningBalance = 0;
@@ -232,12 +277,25 @@ export const generateStatementPDF = (
     styles: {
       cellPadding: 2,
     },
+    didParseCell: (data: any) => {
+      // Make total row bold
+      if (data.row.index === tableData.length) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fontSize = 9;
+      }
+    },
   });
 
   // Page number
-  const finalY = (doc as any).lastAutoTable.finalY || yPos + 50;
+  const finalY = (doc as any).lastAutoTable?.finalY || yPos + 50;
   doc.setFontSize(8);
   doc.text(`M/Surat: 1 / 1`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+
+  // Print info at bottom
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  const printInfo = `Dicetak pada ${formatDate(new Date())} ${new Date().toLocaleTimeString('en-GB')}`;
+  doc.text(printInfo, margin, pageHeight - 10);
 
   // Open PDF in new window for printing/downloading
   doc.save(`Penyata_Akaun_${propertyDetails?.accountNumber || data.statements[0]?.STA_NOMBAKAUN || 'Statement'}.pdf`);

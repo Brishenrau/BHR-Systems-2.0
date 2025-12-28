@@ -1,5 +1,7 @@
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
+import fs from 'fs';
+import path from 'path';
 import type { StatementResponse } from '../services/statement.service';
 
 interface PropertyDetails {
@@ -67,6 +69,21 @@ export async function generateBillPDFBuffer(
       const accountNumber = propertyDetails?.accountNumber || data.statements[0]?.STA_NOMBAKAUN || 0;
       const formattedAccountNumber = `T${String(accountNumber).padStart(9, '0')}`;
 
+      const pageWidth = doc.page.width;
+      const pageHeight = doc.page.height;
+      const margin = 50;
+      let yPos = margin;
+
+      // Try to load watermark (if available)
+      try {
+        const watermarkPath = path.join(process.cwd(), '..', 'frontend', 'public', 'WATERMARK.jpg');
+        if (fs.existsSync(watermarkPath)) {
+          doc.image(watermarkPath, pageWidth / 2 - 50, pageHeight / 2 - 50, { width: 100, height: 100, opacity: 0.3 });
+        }
+      } catch (error) {
+        console.warn('Could not load watermark:', error);
+      }
+
       // Build bill rows
       const billRows: BillRow[] = [];
 
@@ -109,54 +126,68 @@ export async function generateBillPDFBuffer(
       const totalJanJun = billRows.reduce((sum, row) => sum + row.janJunAmount, 0);
       const totalTahun = billRows.reduce((sum, row) => sum + row.tahunAmount, 0);
 
+      // Try to load logo (if available)
+      try {
+        const logoPath = path.join(process.cwd(), '..', 'frontend', 'public', 'MPKKJAWIS.jpg');
+        if (fs.existsSync(logoPath)) {
+          doc.image(logoPath, margin, yPos, { width: 20, height: 20 });
+        }
+      } catch (error) {
+        console.warn('Could not load logo:', error);
+      }
+
       // Header
       doc.fontSize(16).font('Helvetica-Bold');
-      doc.text('MAJLIS PERBANDARAN KULIM', { align: 'center' });
-      doc.moveDown(0.5);
+      doc.text('MAJLIS PERBANDARAN KULIM', { align: 'center', y: yPos + 10 });
+      yPos += 20;
 
       doc.fontSize(10).font('Helvetica');
       doc.text('NO 1, LEBUH BANDAR 2, BANDAR PUTRA, 09000 KULIM', { align: 'center' });
-      doc.moveDown(0.5);
+      yPos += 8;
 
       doc.fontSize(9);
       doc.text('Portal Rasmi: www.mpkk.gov.my', { align: 'center' });
-      doc.moveDown(0.5);
+      yPos += 8;
 
       // Contact Information (right side)
       doc.fontSize(9);
-      doc.text('No Tel: +604-4325225', { align: 'right' });
-      doc.text('No Faks: +604-4325229', { align: 'right' });
-      doc.text('E-mail: info@mpkk.gov.my', { align: 'right' });
-      doc.moveDown(1);
+      doc.text('No Tel: +604-4325225', margin, margin + 5, { align: 'right' });
+      doc.text('No Faks: +604-4325229', margin, margin + 15, { align: 'right' });
+      doc.text('E-mail: info@mpkk.gov.my', margin, margin + 25, { align: 'right' });
+
+      yPos += 5;
 
       // Bill Title (green banner)
-      doc.rect(50, doc.y, 495, 8).fill([0, 128, 0]);
+      doc.rect(margin, yPos, pageWidth - 2 * margin, 8).fill([0, 128, 0]);
       doc.fillColor('white');
       doc.fontSize(14).font('Helvetica-Bold');
-      doc.text(`BIL AWAL CUKAI TAKSIRAN BAGI TAHUN ${billYear}`, { align: 'center', y: doc.y - 4 });
+      doc.text(`BIL AWAL CUKAI TAKSIRAN BAGI TAHUN ${billYear}`, { align: 'center', y: yPos + 2 });
       doc.fillColor('black');
-      doc.moveDown(1.5);
+      yPos += 15;
 
-      // MAKLUMAT PEMILIK Section
+      // MAKLUMAT PEMILIK Section (with green header bar)
+      doc.rect(margin, yPos, pageWidth - 2 * margin, 6).fill([0, 128, 0]);
+      doc.fillColor('white');
       doc.fontSize(11).font('Helvetica-Bold');
-      doc.text('MAKLUMAT PEMILIK');
-      doc.moveDown(0.8);
+      doc.text('MAKLUMAT PEMILIK', margin + 3, yPos + 2);
+      doc.fillColor('black');
+      yPos += 12;
 
       doc.fontSize(9).font('Helvetica');
       const ownerName = propertyDetails?.ownerName || '';
-      doc.text(ownerName);
-      doc.moveDown(0.3);
+      doc.text(ownerName, margin, yPos);
+      yPos += 6;
 
       const mailingAddress = propertyDetails?.mailingAddress || '';
       const mailingLines = mailingAddress.split('\n');
       mailingLines.forEach((line) => {
-        doc.text(line);
-        doc.moveDown(0.2);
+        doc.text(line, margin, yPos);
+        yPos += 5;
       });
 
       // Right side - Account Details
       const rightX = 300;
-      let rightY = doc.y - (mailingLines.length * 12) - 20;
+      let rightY = yPos - (mailingLines.length * 5) - 6;
 
       doc.font('Helvetica-Bold');
       doc.text('No. Akaun:', rightX, rightY);
@@ -180,20 +211,30 @@ export async function generateBillPDFBuffer(
       doc.font('Helvetica');
       doc.text(`Tahun ${billYear}`, rightX + 50, rightY);
 
-      doc.moveDown(1);
+      yPos += 10;
 
-      // MAKLUMAT HARTA/PEGANGAN Section
+      // MAKLUMAT HARTA/PEGANGAN Section (with green header bar)
+      doc.rect(margin, yPos, pageWidth - 2 * margin, 6).fill([0, 128, 0]);
+      doc.fillColor('white');
       doc.fontSize(11).font('Helvetica-Bold');
-      doc.text('MAKLUMAT HARTA/PEGANGAN');
-      doc.moveDown(0.8);
+      doc.text('MAKLUMAT HARTA/PEGANGAN', margin + 3, yPos + 2);
+      doc.fillColor('black');
+      yPos += 12;
 
       doc.fontSize(9).font('Helvetica');
       const propertyAddress = propertyDetails?.propertyAddress || '';
-      doc.text(`Alamat Harta: ${propertyAddress}`);
-      doc.moveDown(0.5);
+      doc.font('Helvetica-Bold');
+      doc.text('Alamat Harta:', margin, yPos);
+      doc.font('Helvetica');
+      yPos += 6;
+      const propertyLines = propertyAddress.split('\n');
+      propertyLines.forEach((line) => {
+        doc.text(line, margin, yPos);
+        yPos += 5;
+      });
 
       // Right side - Property Valuation
-      rightY = doc.y - 15;
+      rightY = yPos - (propertyLines.length * 5) - 6;
       doc.font('Helvetica-Bold');
       doc.text('Nilai Tambah:', rightX, rightY);
       doc.font('Helvetica');
@@ -223,12 +264,15 @@ export async function generateBillPDFBuffer(
         rightY
       );
 
-      doc.moveDown(1.5);
+      yPos += 10;
 
-      // MAKLUMAT BAYARAN Section
+      // MAKLUMAT BAYARAN Section (with green header bar)
+      doc.rect(margin, yPos, pageWidth - 2 * margin, 6).fill([0, 128, 0]);
+      doc.fillColor('white');
       doc.fontSize(11).font('Helvetica-Bold');
-      doc.text('MAKLUMAT BAYARAN');
-      doc.moveDown(0.8);
+      doc.text('MAKLUMAT BAYARAN', margin + 3, yPos + 2);
+      doc.fillColor('black');
+      yPos += 12;
 
       // Payment Due Date (in red)
       doc.fontSize(9);
@@ -238,38 +282,36 @@ export async function generateBillPDFBuffer(
       doc.fillColor('black');
       doc.moveDown(1);
 
-      // QR Codes
-      const qrCodeSize = 60;
-      const qrX = 50;
-      const qrY = doc.y;
+      // QR Code (single QR code for payment)
+      const qrCodeSize = 30;
+      const qrX = margin;
+      const qrY = yPos;
 
       try {
-        // QR Code 1: Account Number
-        const qrAccount = await QRCode.toBuffer(formattedAccountNumber, { width: 200 });
-        doc.image(qrAccount, qrX, qrY, { width: qrCodeSize, height: qrCodeSize });
-
-        // QR Code 2: 6-month total
-        const qrJanJun = await QRCode.toBuffer(formatCurrency(totalJanJun), { width: 200 });
-        doc.image(qrJanJun, qrX + qrCodeSize + 10, qrY, { width: qrCodeSize, height: qrCodeSize });
-
-        // QR Code 3: Yearly total
-        const qrTahun = await QRCode.toBuffer(formatCurrency(totalTahun), { width: 200 });
-        doc.image(qrTahun, qrX + (qrCodeSize + 10) * 2, qrY, { width: qrCodeSize, height: qrCodeSize });
+        // Try to use static QR code image first, otherwise generate one
+        const qrCodePath = path.join(process.cwd(), '..', 'frontend', 'public', 'QRCPBTPAY.jpg');
+        if (fs.existsSync(qrCodePath)) {
+          doc.image(qrCodePath, qrX, qrY, { width: qrCodeSize, height: qrCodeSize });
+        } else {
+          // Generate QR code for account number
+          const qrAccount = await QRCode.toBuffer(formattedAccountNumber, { width: 200 });
+          doc.image(qrAccount, qrX, qrY, { width: qrCodeSize, height: qrCodeSize });
+        }
       } catch (error) {
-        console.warn('Could not generate QR codes:', error);
+        console.warn('Could not load/generate QR code:', error);
       }
 
       doc.fontSize(7).font('Helvetica');
-      doc.text('Sila scan untuk bayaran PBTPay Online', qrX, qrY + qrCodeSize + 5, { width: 200 });
-      doc.moveDown(1);
+      doc.text('Sila scan untuk bayaran PBTPay Online', qrX, qrY + qrCodeSize + 3, { width: qrCodeSize });
+      yPos += qrCodeSize + 10;
 
       // "DITERIMA TANPA PREJUDIS"
       doc.fontSize(8).font('Helvetica-Oblique');
-      doc.text('DITERIMA TANPA PREJUDIS');
-      doc.moveDown(1);
+      doc.text('DITERIMA TANPA PREJUDIS', { align: 'center' });
+      yPos += 10;
 
       // Payment Table
-      const tableTop = doc.y;
+      const tableTop = yPos;
       const colWidths = [250, 120, 120];
       const rowHeight = 20;
       let currentY = tableTop;
@@ -315,8 +357,8 @@ export async function generateBillPDFBuffer(
 
       // Print info at bottom
       doc.fontSize(7).font('Helvetica');
-      const printInfo = `Dicetak oleh: ${propertyDetails?.ownerName || 'System'} pada ${formatDate(new Date())} ${new Date().toLocaleTimeString('en-GB')}`;
-      doc.text(printInfo, 50, doc.page.height - 30);
+      const printInfo = `Dicetak pada ${formatDate(new Date())} ${new Date().toLocaleTimeString('en-GB')}`;
+      doc.text(printInfo, margin, pageHeight - 30);
 
       doc.end();
     } catch (error) {
