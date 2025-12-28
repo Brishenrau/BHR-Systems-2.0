@@ -104,6 +104,23 @@ export const generateBillPDF = async (
   const totalJanJun = billRows.reduce((sum, row) => sum + row.janJunAmount, 0);
   const totalTahun = billRows.reduce((sum, row) => sum + row.tahunAmount, 0);
 
+  // Load and add logo image on the left
+  try {
+    const logoImg = new Image();
+    logoImg.crossOrigin = 'anonymous';
+    logoImg.src = '/logo.png';
+    await new Promise<void>((resolve, reject) => {
+      logoImg.onload = () => {
+        doc.addImage(logoImg, 'PNG', margin, yPos, 25, 25);
+        resolve();
+      };
+      logoImg.onerror = () => reject(new Error('Logo failed'));
+      setTimeout(() => reject(new Error('Timeout')), 3000);
+    });
+  } catch (error) {
+    console.warn('Logo not loaded');
+  }
+
   // Header - Council Name
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
@@ -114,12 +131,12 @@ export const generateBillPDF = async (
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.text('NO 1, LEBUH BANDAR 2, BANDAR PUTRA, 09000 KULIM', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 5;
+  yPos += 6;
 
-  // Portal
+  // Portal - CENTERED, below address
   doc.setFontSize(9);
   doc.text('Portal Rasmi: www.mpkk.gov.my', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 5;
+  yPos += 6;
 
   // Contact Information (right side)
   const contactX = pageWidth - margin;

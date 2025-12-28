@@ -41,6 +41,23 @@ export const generateStatementPDF = async (
   doc.setFontSize(8);
   doc.text('M/Surat: 1 / 1', pageWidth - margin, 8, { align: 'right' });
 
+  // Load and add logo image on the left
+  try {
+    const logoImg = new Image();
+    logoImg.crossOrigin = 'anonymous';
+    logoImg.src = '/logo.png';
+    await new Promise<void>((resolve, reject) => {
+      logoImg.onload = () => {
+        doc.addImage(logoImg, 'PNG', margin, yPos, 25, 25);
+        resolve();
+      };
+      logoImg.onerror = () => reject(new Error('Logo failed'));
+      setTimeout(() => reject(new Error('Timeout')), 3000);
+    });
+  } catch (error) {
+    console.warn('Logo not loaded');
+  }
+
   // Council Name - CENTERED, BOLD, LARGE
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
@@ -53,13 +70,17 @@ export const generateStatementPDF = async (
   doc.text('NO 1, LEBUH BANDAR 2, BANDAR PUTRA, 09000 KULIM', pageWidth / 2, yPos, { align: 'center' });
   yPos += 6;
 
+  // Portal - CENTERED, below address
+  doc.setFontSize(9);
+  doc.text('Portal Rasmi: www.mpkk.gov.my', pageWidth / 2, yPos, { align: 'center' });
+  yPos += 6;
+
   // Contact Info - RIGHT SIDE
   const contactRight = pageWidth - margin;
   doc.setFontSize(9);
   doc.text('No Tel: +604-4325225', contactRight, 20, { align: 'right' });
   doc.text('No Faks: +604-4325229', contactRight, 25, { align: 'right' });
   doc.text('E-mail: info@mpkk.gov.my', contactRight, 30, { align: 'right' });
-  doc.text('Portal Rasmi: www.mpkk.gov.my', contactRight, 35, { align: 'right' });
 
   yPos += 8;
 
