@@ -76,6 +76,7 @@ export const generateStatementPDF = async (
   }
 
   // Load and add MPKKJAWIS.jpg above "MAJLIS PERBANDARAN"
+  let mpkkImageHeight = 0;
   try {
     const mpkkImg = new Image();
     mpkkImg.crossOrigin = 'anonymous';
@@ -89,8 +90,9 @@ export const generateStatementPDF = async (
         const textStartX = pageWidth / 2 - textWidth / 2;
         
         // Position image above the text, spanning from M to N
-        const imgHeight = 15; // Height of the image
-        doc.addImage(mpkkImg, 'JPEG', textStartX, yPos, textWidth, imgHeight);
+        mpkkImageHeight = 15; // Height of the image
+        // Position image above the text (yPos - image height - small gap)
+        doc.addImage(mpkkImg, 'JPEG', textStartX, yPos - mpkkImageHeight - 2, textWidth, mpkkImageHeight);
         resolve();
       };
       mpkkImg.onerror = () => reject(new Error('MPKKJAWIS failed'));
@@ -100,7 +102,7 @@ export const generateStatementPDF = async (
     console.warn('MPKKJAWIS not loaded');
   }
 
-  // Council Name - CENTERED, BOLD, LARGE
+  // Council Name - CENTERED, BOLD, LARGE (positioned below the MPKKJAWIS image)
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.text('MAJLIS PERBANDARAN KULIM', pageWidth / 2, yPos + 10, { align: 'center' });
