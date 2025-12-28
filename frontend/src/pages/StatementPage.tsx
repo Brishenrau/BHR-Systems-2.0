@@ -300,25 +300,25 @@ export const StatementPage = () => {
                 </div>
               )}
               {propertyDetails?.ownerName && (
-                <div className="col-span-2 md:col-span-4 lg:col-span-6">
+                <div className="col-span-2 md:col-span-2 lg:col-span-2">
                   <label className="text-[10px] font-semibold text-gray-600 uppercase block">NAMA PEMILIK</label>
-                  <p className="text-xs font-bold text-yellow-700 bg-yellow-50 px-1.5 py-0.5 rounded inline-block">
+                  <p className="text-xs font-bold text-yellow-700 bg-yellow-50 px-1.5 py-0.5 rounded whitespace-pre-line">
                     {propertyDetails.ownerName}
                   </p>
                 </div>
               )}
               {propertyDetails?.propertyAddress && (
-                <div className="col-span-2 md:col-span-4 lg:col-span-6">
+                <div className="col-span-2 md:col-span-2 lg:col-span-2">
                   <label className="text-[10px] font-semibold text-gray-600 uppercase block">ALAMAT HARTA</label>
-                  <p className="text-xs font-medium text-yellow-700 bg-yellow-50 px-1.5 py-0.5 rounded inline-block whitespace-pre-line">
+                  <p className="text-xs font-medium text-yellow-700 bg-yellow-50 px-1.5 py-0.5 rounded whitespace-pre-line">
                     {propertyDetails.propertyAddress}
                   </p>
                 </div>
               )}
               {propertyDetails?.mailingAddress && propertyDetails.mailingAddress !== propertyDetails?.propertyAddress && (
-                <div className="col-span-2 md:col-span-4 lg:col-span-6">
+                <div className="col-span-2 md:col-span-2 lg:col-span-2">
                   <label className="text-[10px] font-semibold text-gray-600 uppercase block">ALAMAT SURAT-MENYURAT</label>
-                  <p className="text-xs font-medium text-yellow-700 bg-yellow-50 px-1.5 py-0.5 rounded inline-block whitespace-pre-line">
+                  <p className="text-xs font-medium text-yellow-700 bg-yellow-50 px-1.5 py-0.5 rounded whitespace-pre-line">
                     {propertyDetails.mailingAddress}
                   </p>
                 </div>
