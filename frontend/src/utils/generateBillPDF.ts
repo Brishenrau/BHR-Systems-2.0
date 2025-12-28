@@ -387,13 +387,6 @@ export const generateBillPDF = async (
         data.cell.styles.fontSize = 9;
       }
     },
-    // Add page numbers to each page
-    didDrawPage: (data: any) => {
-      const pageNumber = data.pageNumber;
-      const totalPages = (doc as any).internal.getNumberOfPages();
-      doc.setFontSize(8);
-      doc.text(`M/Surat: ${pageNumber} / ${totalPages}`, pageWidth - margin, 8, { align: 'right' });
-    },
   });
 
   // Get total pages after table is drawn

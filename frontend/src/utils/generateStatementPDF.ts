@@ -154,7 +154,7 @@ export const generateStatementPDF = async (
 
   // TWO COLUMN LAYOUT
   const leftX = margin;
-  const rightX = pageWidth / 2 + 10;
+  const rightX = pageWidth / 2 + 25; // Moved further right to avoid overlap with long names
   const labelOffset = 40;
   let leftY = yPos;
   let rightY = yPos;
@@ -185,15 +185,17 @@ export const generateStatementPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text('Negeri:', leftX, leftY);
   doc.setFont('helvetica', 'normal');
-  leftY += 5; // Reduced spacing
+  leftY += 3; // Minimized spacing - moved up
 
-  // RIGHT COLUMN
+  // RIGHT COLUMN - moved further right and values aligned to page edge
+  const valueX = pageWidth - margin; // Align values to right margin
+  
   doc.setFont('helvetica', 'bold');
   doc.text('Nilai Tahunan:', rightX, rightY);
   doc.setFont('helvetica', 'normal');
   doc.text(
     propertyDetails?.newValue ? formatNumber(propertyDetails.newValue) : '-',
-    rightX + 35,
+    valueX,
     rightY,
     { align: 'right' }
   );
@@ -204,7 +206,7 @@ export const generateStatementPDF = async (
   doc.setFont('helvetica', 'normal');
   doc.text(
     propertyDetails?.ratePerYear ? `${propertyDetails.ratePerYear.toFixed(2)}%` : '-',
-    rightX + 35,
+    valueX,
     rightY,
     { align: 'right' }
   );
@@ -215,33 +217,36 @@ export const generateStatementPDF = async (
   doc.setFont('helvetica', 'normal');
   doc.text(
     propertyDetails?.percentage ? `${propertyDetails.percentage.toFixed(2)}%` : '-',
-    rightX + 35,
+    valueX,
     rightY,
     { align: 'right' }
   );
   rightY += 5; // Reduced spacing
 
   doc.setFont('helvetica', 'bold');
-  doc.text('Taksiran Tahunan:', rightX, rightY);
+  const taksiranLabel = 'Taksiran Tahunan:';
+  const taksiranLabelWidth = doc.getTextWidth(taksiranLabel);
+  doc.text(taksiranLabel, rightX, rightY);
   doc.setFont('helvetica', 'normal');
+  // Ensure value doesn't overlap with label - add gap
   doc.text(
     propertyDetails?.newTax ? formatCurrency(propertyDetails.newTax) : '-',
-    rightX + 35,
+    valueX,
     rightY,
     { align: 'right' }
   );
 
-  // Alamat Harta - BELOW COLUMNS, LEFT ALIGNED
-  yPos = Math.max(leftY, rightY) + 6; // Reduced spacing
+  // Alamat Harta - BELOW COLUMNS, LEFT ALIGNED - moved up
+  yPos = Math.max(leftY, rightY) + 3; // Minimized spacing - moved up
   doc.setFont('helvetica', 'bold');
   doc.text('Alamat Harta:', leftX, yPos);
   doc.setFont('helvetica', 'normal');
   const propertyAddress = propertyDetails?.propertyAddress || '';
   const propertyLines = doc.splitTextToSize(propertyAddress, 80);
   doc.text(propertyLines, leftX + labelOffset, yPos);
-  yPos += propertyLines.length * 4 + 6; // Reduced spacing
+  yPos += propertyLines.length * 4 + 3; // Minimized spacing
 
-  // Baki Akhir
+  // Baki Akhir - moved up
   const lastTransaction = data.statements[data.statements.length - 1];
   const endingBalanceDate = lastTransaction?.STA_TARIKHTRX
     ? formatDate(lastTransaction.STA_TARIKHTRX)
@@ -252,7 +257,7 @@ export const generateStatementPDF = async (
   doc.text(`Baki Akhir: ${endingBalanceDate}`, margin, yPos);
   doc.setFont('helvetica', 'normal');
   doc.text(formatCurrency(data.totals.totalBalance), margin + 60, yPos, { align: 'right' });
-  yPos += 8; // Reduced spacing
+  yPos += 6; // Minimized spacing
 
   // Transaction Table
   let runningBalance = 0;
@@ -317,13 +322,6 @@ export const generateStatementPDF = async (
         data.cell.styles.fontSize = 9;
         data.cell.styles.fillColor = [240, 240, 240];
       }
-    },
-    // Add page numbers to each page
-    didDrawPage: (data: any) => {
-      const pageNumber = data.pageNumber;
-      const totalPages = (doc as any).internal.getNumberOfPages();
-      doc.setFontSize(8);
-      doc.text(`M/Surat: ${pageNumber} / ${totalPages}`, pageWidth - margin, 8, { align: 'right' });
     },
   });
 
