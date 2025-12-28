@@ -107,7 +107,7 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
     const sql = `
       SELECT DISTINCT s.STA_NOMBAKAUN
       FROM ${this.getFullTableName()} s
-      INNER JOIN STKN.VTK_PERMILIKAN p ON p.PEG_NOMBAKAUN = s.STA_NOMBAKAUN
+      INNER JOIN SADM.VTK_PERMILIKAN p ON p.PEG_NOMBAKAUN = s.STA_NOMBAKAUN
       WHERE ${conditions.join(' OR ')}
     `;
     
@@ -120,7 +120,7 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
    * Fetches property and owner information from VTK_PERMILIKAN table
    */
   async getPropertyDetails(nomBakaun: number): Promise<any> {
-    const tableName = 'STKN.VTK_PERMILIKAN';
+    const tableName = 'SADM.VTK_PERMILIKAN';
     
     const sql = `
       SELECT 
