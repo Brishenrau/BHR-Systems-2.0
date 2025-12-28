@@ -118,11 +118,11 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
 
   /**
    * Get property and owner details for an account number
-   * Note: Adjust table and column names based on your actual schema
+   * Fetches from TKN_PEGANGAN table which contains property and owner information
    */
   async getPropertyDetails(nomBakaun: number): Promise<any> {
-    // This query assumes a property table exists with owner and property information
-    // Adjust based on your actual schema structure
+    // Query TKN_PEGANGAN for property and owner details
+    // NAMA_PEMILIK is used in searchAccountNumbers, so it should exist in this table
     const sql = `
       SELECT 
         p.PEG_NOMBAKAUN as accountNumber,
@@ -134,30 +134,32 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
         p.PEG_NILAIBARU as newValue,
         p.PEG_KADARTHUN as ratePerYear,
         p.PEG_CUKAIBARU as newTax,
-        -- Add owner name and other fields from the appropriate table
-        -- This is a placeholder - adjust based on your schema
-        NULL as ownerName,
-        NULL as laneCode,
-        NULL as roadCode,
-        NULL as mailingAddress,
-        NULL as ownerType,
-        NULL as race,
-        NULL as ctaCalculation
+        p.NAMA_PEMILIK as ownerName
       FROM STKN.TKN_PEGANGAN p
       WHERE p.PEG_NOMBAKAUN = :nomBakaun
     `;
     
-    const result = await this.queryOne(sql, { nomBakaun });
-    
-    if (result) {
+    try {
+      const result = await this.queryOne<any>(sql, { nomBakaun });
+      
+      if (!result) {
+        return null;
+      }
+
+      // Set mailing address same as property address (can be updated if separate mailing address column exists)
+      result.mailingAddress = result.propertyAddress;
+      
       // Format CTA calculation if values are available
       if (result.newValue && result.ratePerYear && result.percentage) {
         const cta = (result.newValue * (result.ratePerYear / 100) * (result.percentage / 100)).toFixed(2);
         result.ctaCalculation = `${result.newValue.toFixed(2)} X ${result.ratePerYear.toFixed(4)}% X ${result.percentage.toFixed(2)}% = ${cta}`;
       }
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching property details:', error);
+      throw error; // Re-throw to let the controller handle it properly
     }
-    
-    return result;
   }
 }
 

@@ -112,7 +112,10 @@ export const StatementPage = () => {
 
       const [result, propertyInfo] = await Promise.all([
         statementService.getStatementByAccount(nomBakaun),
-        statementService.getPropertyDetails(nomBakaun).catch(() => null), // Fetch property details, ignore errors
+        statementService.getPropertyDetails(nomBakaun).catch((err) => {
+          console.error('Failed to fetch property details:', err);
+          return null; // Return null if property details fail, but don't block statement loading
+        }),
       ]);
       setData(result);
       setPropertyDetails(propertyInfo);
@@ -247,28 +250,28 @@ export const StatementPage = () => {
         )}
 
         {/* Property and Owner Details */}
-        {data && propertyDetails && (
+        {data && (
           <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="text-xs font-semibold text-gray-600 uppercase">NOMBOR AKAUN</label>
                 <p className="text-sm font-bold text-gray-900 mt-1">
-                  {propertyDetails.accountNumber || accountNumber}
+                  {propertyDetails?.accountNumber || accountNumber || data.statements[0]?.STA_NOMBAKAUN}
                 </p>
               </div>
-              {propertyDetails.laneCode && (
+              {propertyDetails?.laneCode && (
                 <div>
                   <label className="text-xs font-semibold text-gray-600 uppercase">KOD LORONG</label>
                   <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.laneCode}</p>
                 </div>
               )}
-              {propertyDetails.roadCode && (
+              {propertyDetails?.roadCode && (
                 <div>
                   <label className="text-xs font-semibold text-gray-600 uppercase">KOD JALAN</label>
                   <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.roadCode}</p>
                 </div>
               )}
-              {propertyDetails.ownerName && (
+              {propertyDetails?.ownerName && (
                 <div className="md:col-span-2 lg:col-span-3">
                   <label className="text-xs font-semibold text-gray-600 uppercase">NAMA PEMILIK</label>
                   <p className="text-sm font-bold text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1 inline-block">
@@ -276,7 +279,7 @@ export const StatementPage = () => {
                   </p>
                 </div>
               )}
-              {propertyDetails.propertyAddress && (
+              {propertyDetails?.propertyAddress && (
                 <div className="md:col-span-2 lg:col-span-3">
                   <label className="text-xs font-semibold text-gray-600 uppercase">ALAMAT HARTA</label>
                   <p className="text-sm font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1 inline-block">
@@ -284,7 +287,7 @@ export const StatementPage = () => {
                   </p>
                 </div>
               )}
-              {propertyDetails.mailingAddress && (
+              {propertyDetails?.mailingAddress && propertyDetails.mailingAddress !== propertyDetails?.propertyAddress && (
                 <div className="md:col-span-2 lg:col-span-3">
                   <label className="text-xs font-semibold text-gray-600 uppercase">ALAMAT SURAT-MENYURAT</label>
                   <p className="text-sm font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1 inline-block">
@@ -292,22 +295,27 @@ export const StatementPage = () => {
                   </p>
                 </div>
               )}
-              {propertyDetails.ownerType && (
+              {propertyDetails?.ownerType && (
                 <div>
                   <label className="text-xs font-semibold text-gray-600 uppercase">JENIS PEMILIK</label>
                   <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.ownerType}</p>
                 </div>
               )}
-              {propertyDetails.race && (
+              {propertyDetails?.race && (
                 <div>
                   <label className="text-xs font-semibold text-gray-600 uppercase">BANGSA</label>
                   <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.race}</p>
                 </div>
               )}
-              {propertyDetails.ctaCalculation && (
+              {propertyDetails?.ctaCalculation && (
                 <div>
                   <label className="text-xs font-semibold text-gray-600 uppercase">KIRAAN CTA</label>
                   <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.ctaCalculation}</p>
+                </div>
+              )}
+              {!propertyDetails && (
+                <div className="md:col-span-2 lg:col-span-3 text-xs text-gray-500 italic">
+                  Property details are being loaded...
                 </div>
               )}
             </div>
