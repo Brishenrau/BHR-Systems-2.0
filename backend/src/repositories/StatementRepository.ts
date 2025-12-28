@@ -149,9 +149,6 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
         return null;
       }
 
-      // Set mailing address same as property address (can be updated if separate mailing address column exists)
-      result.mailingAddress = result.propertyAddress;
-      
       // Format CTA calculation if values are available
       if (result.newValue && result.ratePerYear && result.percentage) {
         const cta = (result.newValue * (result.ratePerYear / 100) * (result.percentage / 100)).toFixed(2);
