@@ -103,12 +103,11 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
     }
 
     // Query to find distinct account numbers
-    // This structure assumes TKN_PEGANGAN table exists with PEG_NOMBAKAUN linking to STA_NOMBAKAUN
-    // Adjust based on your actual schema
+    // Using VTK_PERMILIKAN table which contains property and owner information
     const sql = `
       SELECT DISTINCT s.STA_NOMBAKAUN
       FROM ${this.getFullTableName()} s
-      INNER JOIN STKN.TKN_PEGANGAN p ON p.PEG_NOMBAKAUN = s.STA_NOMBAKAUN
+      INNER JOIN STKN.VTK_PERMILIKAN p ON p.PEG_NOMBAKAUN = s.STA_NOMBAKAUN
       WHERE ${conditions.join(' OR ')}
     `;
     
@@ -118,11 +117,11 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
 
   /**
    * Get property and owner details for an account number
-   * Fetches from TKN_PEGANGAN table which contains property and owner information
+   * Fetches property and owner information from VTK_PERMILIKAN table
    */
   async getPropertyDetails(nomBakaun: number): Promise<any> {
-    // Query TKN_PEGANGAN for property and owner details
-    // NAMA_PEMILIK is used in searchAccountNumbers, so it should exist in this table
+    const tableName = 'STKN.VTK_PERMILIKAN';
+    
     const sql = `
       SELECT 
         p.PEG_NOMBAKAUN as accountNumber,
@@ -135,7 +134,7 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
         p.PEG_KADARTHUN as ratePerYear,
         p.PEG_CUKAIBARU as newTax,
         p.NAMA_PEMILIK as ownerName
-      FROM STKN.TKN_PEGANGAN p
+      FROM ${tableName} p
       WHERE p.PEG_NOMBAKAUN = :nomBakaun
     `;
     
@@ -156,9 +155,14 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
       }
       
       return result;
-    } catch (error) {
+    } catch (error: any) {
+      // If table doesn't exist, return null gracefully instead of crashing
+      if (error.errorNum === 942) { // ORA-00942: table or view does not exist
+        console.error(`Table ${tableName} does not exist. Please update the table name in getPropertyDetails method.`);
+        return null; // Return null so the page still works without property details
+      }
       console.error('Error fetching property details:', error);
-      throw error; // Re-throw to let the controller handle it properly
+      throw error;
     }
   }
 }
