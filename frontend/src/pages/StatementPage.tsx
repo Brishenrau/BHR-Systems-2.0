@@ -688,8 +688,8 @@ export const StatementPage = () => {
           </div>
         )}
 
-        {/* Date Range Filter */}
-        {data && (
+        {/* Date Range Filter - Only for PENYATA AKAUN tab */}
+        {data && activeTab === 'statement' && (
           <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
