@@ -16,7 +16,7 @@ interface PropertyDetails {
 export const generateStatementPDF = async (
   data: StatementResponse,
   propertyDetails: PropertyDetails | null
-): Promise<void> => {
+): Promise<string> => {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -340,5 +340,8 @@ export const generateStatementPDF = async (
     doc.text(`M/Surat: ${i} / ${totalPages}`, pageWidth - margin, 8, { align: 'right' });
   }
 
-  doc.save(`Penyata_Akaun_${formattedAccountNumber}.pdf`);
+  // Return PDF as blob URL instead of saving
+  const pdfBlob = doc.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  return pdfUrl;
 };

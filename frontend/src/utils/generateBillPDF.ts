@@ -23,7 +23,7 @@ interface BillRow {
 export const generateBillPDF = async (
   data: StatementResponse,
   propertyDetails: PropertyDetails | null
-): Promise<void> => {
+): Promise<string> => {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -406,7 +406,9 @@ export const generateBillPDF = async (
     doc.text(`M/Surat: ${i} / ${totalPages}`, pageWidth - margin, 8, { align: 'right' });
   }
 
-  // Save PDF
-  doc.save(`Bil_Awal_Cukai_Taksiran_${formattedAccountNumber}_${billYear}.pdf`);
+  // Return PDF as blob URL instead of saving
+  const pdfBlob = doc.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  return pdfUrl;
 };
 

@@ -3,6 +3,7 @@ import { statementService } from '../services/statement.service';
 import { useSidebarStore } from '../store/sidebarStore';
 import { generateStatementPDF } from '../utils/generateStatementPDF';
 import { generateBillPDF } from '../utils/generateBillPDF';
+import { PDFPreviewModal } from '../components/PDFPreviewModal';
 import type { ApiError } from '../types/api.types';
 import type { StatementResponse, TKN_STATEMENT } from '../types/database.types';
 
@@ -26,6 +27,11 @@ export const StatementPage = () => {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
   const [includeOlderRecords, setIncludeOlderRecords] = useState<boolean>(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [pdfPreviewFileName, setPdfPreviewFileName] = useState<string>('');
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [pdfPreviewType, setPdfPreviewType] = useState<'statement' | 'bill' | null>(null);
+  const [sendingPdfEmail, setSendingPdfEmail] = useState(false);
 
   // Collapse sidebar when component mounts, restore when unmounts
   useEffect(() => {
@@ -414,20 +420,29 @@ export const StatementPage = () => {
           </div>
         )}
 
-        {/* PDF Download and Email Buttons */}
+        {/* PDF Preview Buttons */}
         {data && (
           <div className="mb-4 flex justify-end gap-2">
             <button
               onClick={async () => {
                 try {
-                  await generateStatementPDF(data, propertyDetails);
+                  setLoading(true);
+                  const accountNumber = propertyDetails?.accountNumber || data.statements[0]?.STA_NOMBAKAUN || 0;
+                  const formattedAccountNumber = `T${String(accountNumber).padStart(9, '0')}`;
+                  const pdfUrl = await generateStatementPDF(data, propertyDetails);
+                  setPdfPreviewUrl(pdfUrl);
+                  setPdfPreviewFileName(`Penyata_Akaun_${formattedAccountNumber}.pdf`);
+                  setPdfPreviewType('statement');
+                  setShowPdfPreview(true);
                 } catch (error) {
                   console.error('Error generating statement PDF:', error);
                   setError('Failed to generate statement PDF. Please try again.');
+                } finally {
+                  setLoading(false);
                 }
               }}
               className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              title="Generate and download Statement PDF"
+              title="Preview Statement PDF"
             >
               <svg
                 className="w-6 h-6"
@@ -447,14 +462,24 @@ export const StatementPage = () => {
             <button
               onClick={async () => {
                 try {
-                  await generateBillPDF(data, propertyDetails);
+                  setLoading(true);
+                  const accountNumber = propertyDetails?.accountNumber || data.statements[0]?.STA_NOMBAKAUN || 0;
+                  const formattedAccountNumber = `T${String(accountNumber).padStart(9, '0')}`;
+                  const billYear = new Date().getFullYear();
+                  const pdfUrl = await generateBillPDF(data, propertyDetails);
+                  setPdfPreviewUrl(pdfUrl);
+                  setPdfPreviewFileName(`Bil_Awal_Cukai_Taksiran_${formattedAccountNumber}_${billYear}.pdf`);
+                  setPdfPreviewType('bill');
+                  setShowPdfPreview(true);
                 } catch (error) {
                   console.error('Error generating bill PDF:', error);
                   setError('Failed to generate bill PDF. Please try again.');
+                } finally {
+                  setLoading(false);
                 }
               }}
               className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              title="Generate and download Bill PDF (BIL AWAL CUKAI TAKSIRAN)"
+              title="Preview Bill PDF (BIL AWAL CUKAI TAKSIRAN)"
             >
               <svg
                 className="w-6 h-6"
@@ -468,30 +493,6 @@ export const StatementPage = () => {
                   strokeLinejoin="round"
                   strokeWidth={2}
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={() => {
-                // Auto-fill email from property details if available
-                setEmailAddress(propertyDetails?.ownerEmail || '');
-                setShowEmailDialog(true);
-              }}
-              className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              title="Send PDF via email"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                 />
               </svg>
             </button>
@@ -961,6 +962,42 @@ export const StatementPage = () => {
             Enter an account number and click "Load Statement" to view the statement
           </div>
         )}
+
+        {/* PDF Preview Modal */}
+        <PDFPreviewModal
+          isOpen={showPdfPreview}
+          pdfUrl={pdfPreviewUrl}
+          fileName={pdfPreviewFileName}
+          onClose={() => {
+            setShowPdfPreview(false);
+            if (pdfPreviewUrl) {
+              URL.revokeObjectURL(pdfPreviewUrl);
+            }
+            setPdfPreviewUrl(null);
+            setPdfPreviewFileName('');
+            setPdfPreviewType(null);
+          }}
+          onDownload={() => {
+            if (pdfPreviewUrl) {
+              const link = document.createElement('a');
+              link.href = pdfPreviewUrl;
+              link.download = pdfPreviewFileName;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }
+          }}
+          onEmail={async () => {
+            if (!pdfPreviewUrl || !pdfPreviewType) return;
+            
+            // Auto-fill email from property details if available
+            setEmailAddress(propertyDetails?.ownerEmail || '');
+            setShowEmailDialog(true);
+            // Close PDF preview when opening email dialog
+            setShowPdfPreview(false);
+          }}
+          isEmailing={sendingPdfEmail}
+        />
       </div>
     </div>
   );
