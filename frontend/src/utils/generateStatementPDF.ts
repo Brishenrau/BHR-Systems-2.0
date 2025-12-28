@@ -33,6 +33,11 @@ export const generateStatementPDF = async (
     return amount.toFixed(2);
   };
 
+  // Helper function to format number with commas
+  const formatNumber = (num: number): string => {
+    return num.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  };
+
   // Helper function to format date
   const formatDate = (date: Date | string | null | undefined): string => {
     if (!date) return '';
@@ -50,8 +55,7 @@ export const generateStatementPDF = async (
     watermarkImg.src = '/WATERMARK.jpg';
     await new Promise<void>((resolve, reject) => {
       watermarkImg.onload = () => {
-        // Add watermark as background (semi-transparent)
-        // Note: jsPDF doesn't support opacity directly, but we can use a lighter image or adjust
+        // Add watermark as background
         doc.addImage(watermarkImg, 'JPEG', pageWidth / 2 - 50, pageHeight / 2 - 50, 100, 100, undefined, 'FAST');
         resolve();
       };
@@ -61,6 +65,11 @@ export const generateStatementPDF = async (
   } catch (error) {
     console.warn('Could not load watermark:', error);
   }
+
+  // Page number in top right
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('M/Surat: 1 / 1', pageWidth - margin, margin + 3, { align: 'right' });
 
   // Load and add logo image
   try {
@@ -90,21 +99,17 @@ export const generateStatementPDF = async (
   doc.text('NO 1, LEBUH BANDAR 2, BANDAR PUTRA, 09000 KULIM', pageWidth / 2, yPos, { align: 'center' });
   yPos += 5;
 
-  // Portal
-  doc.setFontSize(9);
-  doc.text('Portal Rasmi: www.mpkk.gov.my', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 5;
-
   // Contact Information (right side)
   const contactX = pageWidth - margin;
   doc.setFontSize(9);
   doc.text('No Tel: +604-4325225', contactX, margin + 5, { align: 'right' });
   doc.text('No Faks: +604-4325229', contactX, margin + 10, { align: 'right' });
   doc.text('E-mail: info@mpkk.gov.my', contactX, margin + 15, { align: 'right' });
+  doc.text('Portal Rasmi: www.mpkk.gov.my', contactX, margin + 20, { align: 'right' });
 
   yPos += 5;
 
-  // Document Title (green banner)
+  // Document Title (dark green banner)
   doc.setFillColor(0, 128, 0); // Green color
   doc.rect(margin, yPos, pageWidth - 2 * margin, 8, 'F');
   doc.setTextColor(255, 255, 255);
@@ -112,49 +117,57 @@ export const generateStatementPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text('PENYATA AKAUN CUKAI TAKSIRAN', pageWidth / 2, yPos + 5.5, { align: 'center' });
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 12;
-
-  // Section Header (with light green background)
-  doc.setFillColor(240, 255, 240); // Light green
-  doc.rect(margin, yPos - 3, pageWidth - 2 * margin, 6, 'F');
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.text('MAKLUMAT PEMILIK dan HARTA PEGANGAN', margin, yPos);
   yPos += 8;
 
-  // Owner and Property Details
+  // Section Header (light green bar immediately below dark green bar)
+  doc.setFillColor(240, 255, 240); // Light green
+  doc.rect(margin, yPos, pageWidth - 2 * margin, 6, 'F');
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text('MAKLUMAT PEMILIK dan HARTA PEGANGAN', margin + 3, yPos + 4);
+  yPos += 10;
+
+  // Owner and Property Details - Two Column Layout
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
 
   const leftColX = margin;
   const rightColX = pageWidth / 2 + 10;
+  const labelWidth = 40;
+  const valueOffset = 5;
+
+  // Format account number with T prefix
+  const accountNumber = propertyDetails?.accountNumber || data.statements[0]?.STA_NOMBAKAUN || 0;
+  const formattedAccountNumber = `T${String(accountNumber).padStart(9, '0')}`;
 
   // Left Column - Owner Details
   let leftY = yPos;
   doc.setFont('helvetica', 'bold');
   doc.text('Nombor Akaun:', leftColX, leftY);
   doc.setFont('helvetica', 'normal');
-  doc.text(
-    propertyDetails?.accountNumber?.toString() || data.statements[0]?.STA_NOMBAKAUN?.toString() || '',
-    leftColX + 40,
-    leftY
-  );
+  doc.text(formattedAccountNumber, leftColX + labelWidth, leftY);
   leftY += 6;
 
   doc.setFont('helvetica', 'bold');
   doc.text('Nama Pemilik:', leftColX, leftY);
   doc.setFont('helvetica', 'normal');
   const ownerName = propertyDetails?.ownerName || '';
-  doc.text(ownerName, leftColX + 40, leftY);
+  doc.text(ownerName, leftColX + labelWidth, leftY);
   leftY += 6;
 
   doc.setFont('helvetica', 'bold');
   doc.text('Alamat Surat:', leftColX, leftY);
   doc.setFont('helvetica', 'normal');
   const mailingAddress = propertyDetails?.mailingAddress || '';
-  const mailingLines = doc.splitTextToSize(mailingAddress, 80);
-  doc.text(mailingLines, leftColX + 40, leftY);
+  const mailingLines = doc.splitTextToSize(mailingAddress, 70);
+  doc.text(mailingLines, leftColX + labelWidth, leftY);
   leftY += mailingLines.length * 5 + 2;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('Negeri:', leftColX, leftY);
+  doc.setFont('helvetica', 'normal');
+  // Negeri field (empty for now)
+  leftY += 6;
 
   // Right Column - Assessment Details
   let rightY = yPos;
@@ -162,9 +175,10 @@ export const generateStatementPDF = async (
   doc.text('Nilai Tahunan:', rightColX, rightY);
   doc.setFont('helvetica', 'normal');
   doc.text(
-    propertyDetails?.newValue ? formatCurrency(propertyDetails.newValue) : '-',
+    propertyDetails?.newValue ? formatNumber(propertyDetails.newValue) : '-',
     rightColX + 35,
-    rightY
+    rightY,
+    { align: 'right' }
   );
   rightY += 6;
 
@@ -172,9 +186,10 @@ export const generateStatementPDF = async (
   doc.text('% Kadar:', rightColX, rightY);
   doc.setFont('helvetica', 'normal');
   doc.text(
-    propertyDetails?.ratePerYear ? `${propertyDetails.ratePerYear.toFixed(4)}%` : '-',
+    propertyDetails?.ratePerYear ? `${propertyDetails.ratePerYear.toFixed(2)}%` : '-',
     rightColX + 35,
-    rightY
+    rightY,
+    { align: 'right' }
   );
   rightY += 6;
 
@@ -184,7 +199,8 @@ export const generateStatementPDF = async (
   doc.text(
     propertyDetails?.percentage ? `${propertyDetails.percentage.toFixed(2)}%` : '-',
     rightColX + 35,
-    rightY
+    rightY,
+    { align: 'right' }
   );
   rightY += 6;
 
@@ -194,17 +210,18 @@ export const generateStatementPDF = async (
   doc.text(
     propertyDetails?.newTax ? formatCurrency(propertyDetails.newTax) : '-',
     rightColX + 35,
-    rightY
+    rightY,
+    { align: 'right' }
   );
 
-  // Alamat Harta section (below owner/assessment details)
+  // Alamat Harta section (below owner/assessment details, left aligned)
   yPos = Math.max(leftY, rightY) + 8;
   doc.setFont('helvetica', 'bold');
   doc.text('Alamat Harta:', leftColX, yPos);
   doc.setFont('helvetica', 'normal');
   const propertyAddress = propertyDetails?.propertyAddress || '';
   const propertyLines = doc.splitTextToSize(propertyAddress, 80);
-  doc.text(propertyLines, leftColX + 40, yPos);
+  doc.text(propertyLines, leftColX + labelWidth, yPos);
   yPos += propertyLines.length * 5 + 8;
 
   // Calculate ending balance date (last transaction date or current date)
@@ -214,12 +231,11 @@ export const generateStatementPDF = async (
     : new Date().toLocaleDateString('en-GB');
 
   // Ending Balance
-  yPos += 5;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.text(`Baki Akhir: ${endingBalanceDate}`, margin, yPos);
   doc.setFont('helvetica', 'normal');
-  doc.text(formatCurrency(data.totals.totalBalance), margin + 60, yPos);
+  doc.text(formatCurrency(data.totals.totalBalance), margin + 60, yPos, { align: 'right' });
   yPos += 10;
 
   // Transaction Table - Calculate running balances
@@ -282,26 +298,22 @@ export const generateStatementPDF = async (
       cellPadding: 2,
     },
     didParseCell: (data: any) => {
-      // Make total row bold
+      // Make total row bold with darker background
       if (data.row.index === tableData.length) {
         data.cell.styles.fontStyle = 'bold';
         data.cell.styles.fontSize = 9;
+        data.cell.styles.fillColor = [240, 240, 240]; // Same as header
       }
     },
   });
 
-  // Page number
-  const finalY = (doc as any).lastAutoTable?.finalY || yPos + 50;
-  doc.setFontSize(8);
-  doc.text(`M/Surat: 1 / 1`, pageWidth - margin, pageHeight - 10, { align: 'right' });
-
   // Print info at bottom
+  const finalY = (doc as any).lastAutoTable?.finalY || yPos + 50;
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   const printInfo = `Dicetak pada ${formatDate(new Date())} ${new Date().toLocaleTimeString('en-GB')}`;
   doc.text(printInfo, margin, pageHeight - 10);
 
   // Open PDF in new window for printing/downloading
-  doc.save(`Penyata_Akaun_${propertyDetails?.accountNumber || data.statements[0]?.STA_NOMBAKAUN || 'Statement'}.pdf`);
+  doc.save(`Penyata_Akaun_${formattedAccountNumber}.pdf`);
 };
-
