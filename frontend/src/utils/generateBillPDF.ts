@@ -108,7 +108,7 @@ export const generateBillPDF = async (
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.text('MAJLIS PERBANDARAN KULIM', pageWidth / 2, yPos + 10, { align: 'center' });
-  yPos += 8;
+  yPos += 18; // Move down after council name
 
   // Address
   doc.setFontSize(10);
