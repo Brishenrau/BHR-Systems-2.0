@@ -33,6 +33,15 @@ export class EmailService {
           user: smtpUser,
           pass: smtpPassword,
         },
+        connectionTimeout: 10000, // 10 seconds
+        greetingTimeout: 10000, // 10 seconds
+        socketTimeout: 10000, // 10 seconds
+        // For servers that require STARTTLS
+        requireTLS: !smtpSecure && smtpPort === 587,
+        tls: {
+          // Do not fail on invalid certificates
+          rejectUnauthorized: false,
+        },
       });
     } else {
       console.warn('SMTP configuration not found. Email functionality will be disabled.');
@@ -62,6 +71,23 @@ export class EmailService {
       console.log('Email sent successfully:', info.messageId);
     } catch (error) {
       console.error('Error sending email:', error);
+      
+      // Provide more helpful error messages
+      if (error instanceof Error) {
+        if (error.message.includes('ETIMEDOUT') || error.message.includes('ECONNREFUSED')) {
+          throw new Error(`Cannot connect to SMTP server. Please check:
+1. SMTP_HOST and SMTP_PORT are correct
+2. Firewall is not blocking the connection
+3. Network connectivity to the SMTP server
+4. Try using a different port (587 for TLS, 465 for SSL, 25 for unencrypted)`);
+        } else if (error.message.includes('EAUTH')) {
+          throw new Error('SMTP authentication failed. Please check SMTP_USER and SMTP_PASSWORD.');
+        } else if (error.message.includes('EENVELOPE')) {
+          throw new Error('Invalid email address. Please check the recipient email.');
+        } else {
+          throw new Error(`Failed to send email: ${error.message}`);
+        }
+      }
       throw new Error(`Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
