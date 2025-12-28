@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { statementService } from '../services/statement.service';
 import { useSidebarStore } from '../store/sidebarStore';
 import { generateStatementPDF } from '../utils/generateStatementPDF';
+import { generateBillPDF } from '../utils/generateBillPDF';
 import type { ApiError } from '../types/api.types';
 import type { StatementResponse, TKN_STATEMENT } from '../types/database.types';
 
@@ -412,7 +413,7 @@ export const StatementPage = () => {
             <button
               onClick={() => generateStatementPDF(data, propertyDetails)}
               className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              title="Generate and download PDF"
+              title="Generate and download Statement PDF"
             >
               <svg
                 className="w-6 h-6"
@@ -430,7 +431,38 @@ export const StatementPage = () => {
               </svg>
             </button>
             <button
-              onClick={() => setShowEmailDialog(true)}
+              onClick={async () => {
+                try {
+                  await generateBillPDF(data, propertyDetails);
+                } catch (error) {
+                  console.error('Error generating bill PDF:', error);
+                  setError('Failed to generate bill PDF. Please try again.');
+                }
+              }}
+              className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              title="Generate and download Bill PDF (BIL AWAL CUKAI TAKSIRAN)"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </button>
+            <button
+              onClick={() => {
+                // Auto-fill email from property details if available
+                setEmailAddress(propertyDetails?.ownerEmail || '');
+                setShowEmailDialog(true);
+              }}
               className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               title="Send PDF via email"
             >
