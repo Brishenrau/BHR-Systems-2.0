@@ -203,7 +203,7 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text('BIL AWAL CUKAI TAKSIRAN BAGI TAHUN ' + billYear, pageWidth / 2, yPos + 5.5, { align: 'center' });
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 10; // Reduced spacing
+  yPos += 15; // Increased gap before MAKLUMAT PEMILIK
 
   // MAKLUMAT PEMILIK Section (with green header bar)
   doc.setFillColor(0, 128, 0); // Green color
@@ -213,7 +213,7 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text('MAKLUMAT PEMILIK', margin + 3, yPos + 4);
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 8; // Reduced spacing
+  yPos += 10; // Increased gap after header before data
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -232,9 +232,13 @@ export const generateBillPDF = async (
     yPos += 3.5; // Reduced spacing
   });
 
-  // Right side - Account Details
+  // Move yPos down after owner information
+  yPos += 5; // Gap after owner information
+
+  // Right side - Account Details (positioned lower, not part of Maklumat Pemilik)
   const rightColX = pageWidth / 2 + 20;
-  let rightY = yPos - (mailingLines.length * 4) - 5;
+  // Position No.Akaun lower, after the owner information
+  let rightY = yPos - 5; // Start from after owner info
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
@@ -269,7 +273,7 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text('MAKLUMAT HARTA/PEGANGAN', margin + 3, yPos + 4);
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 8; // Reduced spacing
+  yPos += 10; // Increased gap after header before data
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -327,7 +331,7 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text('MAKLUMAT BAYARAN', margin + 3, yPos + 4);
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 8; // Reduced spacing
+  yPos += 10; // Increased gap after header before data
 
   // Payment Due Date (in red)
   doc.setFontSize(9);
@@ -336,12 +340,6 @@ export const generateBillPDF = async (
   doc.text(`Bayar Pada/Sebelum: ${formatDate(dueDate)}`, margin, yPos);
   doc.setTextColor(0, 0, 0); // Reset to black
   yPos += 5; // Reduced spacing
-
-  // "DITERIMA TANPA PREJUDIS" text (centered)
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'italic');
-  doc.text('DITERIMA TANPA PREJUDIS', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 6; // Reduced spacing
 
   // Payment Table
   const tableData = billRows.map((row) => [
