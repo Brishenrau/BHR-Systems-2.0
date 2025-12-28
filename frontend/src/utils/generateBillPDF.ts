@@ -146,16 +146,20 @@ export const generateBillPDF = async (
     mpkkImg.src = '/MPKKJAWIS.jpg';
     await new Promise<void>((resolve, reject) => {
       mpkkImg.onload = () => {
-        // Calculate width of "MAJLIS PERBANDARAN" text
+        // Calculate where "MAJLIS" starts in the centered text "MAJLIS PERBANDARAN KULIM"
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
-        const textWidth = doc.getTextWidth('MAJLIS PERBANDARAN');
-        const textStartX = pageWidth / 2 - textWidth / 2;
+        const fullText = 'MAJLIS PERBANDARAN KULIM';
+        const fullTextWidth = doc.getTextWidth(fullText);
+        const fullTextStartX = pageWidth / 2 - fullTextWidth / 2;
         
-        // Position image above the text, spanning from M to N
+        // Calculate width of "MAJLIS PERBANDARAN" for image width
+        const textWidth = doc.getTextWidth('MAJLIS PERBANDARAN');
+        
+        // Position image above the text, starting at the M in MAJLIS
         mpkkImageHeight = 15; // Height of the image
-        // Position image above the text (yPos - image height - small gap)
-        doc.addImage(mpkkImg, 'JPEG', textStartX, yPos - mpkkImageHeight - 2, textWidth, mpkkImageHeight);
+        // Position image above the text (yPos - image height - smaller gap)
+        doc.addImage(mpkkImg, 'JPEG', fullTextStartX, yPos - mpkkImageHeight - 0.5, textWidth, mpkkImageHeight);
         resolve();
       };
       mpkkImg.onerror = () => reject(new Error('MPKKJAWIS failed'));
