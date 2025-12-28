@@ -128,6 +128,11 @@ export const StatementPage = () => {
       }
       // Update account number field with the found account
       setAccountNumber(nomBakaun.toString());
+      
+      // Auto-scroll to bottom after data loads
+      setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      }, 100);
     } catch (err) {
       const apiError = err as ApiError;
       setError(apiError.message || 'Failed to load statement');
@@ -150,8 +155,6 @@ export const StatementPage = () => {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">PENYATA HUTANG TAKSIRAN</h1>
-
         {/* Search Form */}
         <form onSubmit={handleSubmit} className="mb-6">
           <div className="mb-4">
@@ -256,73 +259,68 @@ export const StatementPage = () => {
           </div>
         )}
 
-        {/* Property and Owner Details */}
+        {/* Property and Owner Details - Compact Version */}
         {data && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="mb-4 p-2 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-3 gap-y-1 text-xs">
               <div>
-                <label className="text-xs font-semibold text-gray-600 uppercase">NOMBOR AKAUN</label>
-                <p className="text-sm font-bold text-gray-900 mt-1">
+                <label className="text-[10px] font-semibold text-gray-600 uppercase block">NOMBOR AKAUN</label>
+                <p className="text-xs font-bold text-gray-900">
                   {propertyDetails?.accountNumber || accountNumber || data.statements[0]?.STA_NOMBAKAUN}
                 </p>
               </div>
               {propertyDetails?.laneCode && (
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 uppercase">KOD LORONG</label>
-                  <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.laneCode}</p>
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase block">KOD LORONG</label>
+                  <p className="text-xs font-medium text-gray-900">{propertyDetails.laneCode}</p>
                 </div>
               )}
               {propertyDetails?.roadCode && (
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 uppercase">KOD JALAN</label>
-                  <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.roadCode}</p>
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase block">KOD JALAN</label>
+                  <p className="text-xs font-medium text-gray-900">{propertyDetails.roadCode}</p>
+                </div>
+              )}
+              {propertyDetails?.ownerType && (
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase block">JENIS PEMILIK</label>
+                  <p className="text-xs font-medium text-gray-900">{propertyDetails.ownerType}</p>
+                </div>
+              )}
+              {propertyDetails?.race && (
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase block">BANGSA</label>
+                  <p className="text-xs font-medium text-gray-900">{propertyDetails.race}</p>
+                </div>
+              )}
+              {propertyDetails?.ctaCalculation && (
+                <div>
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase block">KIRAAN CTA</label>
+                  <p className="text-xs font-medium text-gray-900">{propertyDetails.ctaCalculation}</p>
                 </div>
               )}
               {propertyDetails?.ownerName && (
-                <div className="md:col-span-2 lg:col-span-3">
-                  <label className="text-xs font-semibold text-gray-600 uppercase">NAMA PEMILIK</label>
-                  <p className="text-sm font-bold text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1 inline-block">
+                <div className="col-span-2 md:col-span-4 lg:col-span-6">
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase block">NAMA PEMILIK</label>
+                  <p className="text-xs font-bold text-yellow-700 bg-yellow-50 px-1.5 py-0.5 rounded inline-block">
                     {propertyDetails.ownerName}
                   </p>
                 </div>
               )}
               {propertyDetails?.propertyAddress && (
-                <div className="md:col-span-2 lg:col-span-3">
-                  <label className="text-xs font-semibold text-gray-600 uppercase">ALAMAT HARTA</label>
-                  <p className="text-sm font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1 inline-block">
+                <div className="col-span-2 md:col-span-4 lg:col-span-6">
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase block">ALAMAT HARTA</label>
+                  <p className="text-xs font-medium text-yellow-700 bg-yellow-50 px-1.5 py-0.5 rounded inline-block whitespace-pre-line">
                     {propertyDetails.propertyAddress}
                   </p>
                 </div>
               )}
               {propertyDetails?.mailingAddress && propertyDetails.mailingAddress !== propertyDetails?.propertyAddress && (
-                <div className="md:col-span-2 lg:col-span-3">
-                  <label className="text-xs font-semibold text-gray-600 uppercase">ALAMAT SURAT-MENYURAT</label>
-                  <p className="text-sm font-medium text-yellow-700 bg-yellow-50 px-2 py-1 rounded mt-1 inline-block">
+                <div className="col-span-2 md:col-span-4 lg:col-span-6">
+                  <label className="text-[10px] font-semibold text-gray-600 uppercase block">ALAMAT SURAT-MENYURAT</label>
+                  <p className="text-xs font-medium text-yellow-700 bg-yellow-50 px-1.5 py-0.5 rounded inline-block whitespace-pre-line">
                     {propertyDetails.mailingAddress}
                   </p>
-                </div>
-              )}
-              {propertyDetails?.ownerType && (
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 uppercase">JENIS PEMILIK</label>
-                  <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.ownerType}</p>
-                </div>
-              )}
-              {propertyDetails?.race && (
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 uppercase">BANGSA</label>
-                  <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.race}</p>
-                </div>
-              )}
-              {propertyDetails?.ctaCalculation && (
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 uppercase">KIRAAN CTA</label>
-                  <p className="text-sm font-medium text-gray-900 mt-1">{propertyDetails.ctaCalculation}</p>
-                </div>
-              )}
-              {!propertyDetails && (
-                <div className="md:col-span-2 lg:col-span-3 text-xs text-gray-500 italic">
-                  Property details are being loaded...
                 </div>
               )}
             </div>
