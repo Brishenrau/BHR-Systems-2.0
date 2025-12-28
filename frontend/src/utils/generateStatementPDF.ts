@@ -260,8 +260,21 @@ export const generateStatementPDF = async (
   yPos += 6; // Minimized spacing
 
   // Transaction Table
-  let runningBalance = 0;
-  const tableData = data.statements.map((stmt) => {
+  // Start running balance from opening balance if present
+  const openingBalance = data.openingBalance !== undefined ? data.openingBalance : 0;
+  let runningBalance = openingBalance;
+  
+  // Add opening balance row if present
+  const tableData: any[] = [];
+  if (openingBalance !== 0 && data.openingBalance !== undefined) {
+    const openingBalanceStr = openingBalance < 0
+      ? `(${formatCurrency(Math.abs(openingBalance))})`
+      : formatCurrency(openingBalance);
+    tableData.push(['BAKI BAWAAN', '', 'Carried Forward Balance', '', '', openingBalanceStr]);
+  }
+  
+  // Add transaction rows
+  data.statements.forEach((stmt) => {
     const date = formatDate(stmt.STA_TARIKHTRX);
     const document = stmt.STA_REFERENCE || '-';
     const description = stmt.TRA_TRANSNAME || stmt.STA_TRANSCODE || 'CUKAI TAKSIRAN';
@@ -278,7 +291,7 @@ export const generateStatementPDF = async (
       ? `(${formatCurrency(Math.abs(runningBalance))})`
       : formatCurrency(runningBalance);
 
-    return [date, document, description, debit, credit, balanceStr];
+    tableData.push([date, document, description, debit, credit, balanceStr]);
   });
 
   const totalDebit = formatCurrency(data.totals.totalDebit);
@@ -316,11 +329,23 @@ export const generateStatementPDF = async (
     styles: {
       cellPadding: 2,
     },
-    didParseCell: (data: any) => {
-      if (data.row.index === tableData.length) {
-        data.cell.styles.fontStyle = 'bold';
-        data.cell.styles.fontSize = 9;
-        data.cell.styles.fillColor = [240, 240, 240];
+    didParseCell: (cellData: any) => {
+      const hasOpeningBalance = openingBalance !== 0;
+      
+      // Style opening balance row
+      if (hasOpeningBalance && cellData.row.index === 0) {
+        cellData.cell.styles.fontStyle = 'bold';
+        cellData.cell.styles.fillColor = [230, 240, 255]; // Light blue background
+        if (cellData.column.index === 2) {
+          cellData.cell.styles.textColor = [0, 0, 0];
+        }
+      }
+      // Style total row
+      const totalRowIndex = hasOpeningBalance ? tableData.length : tableData.length - 1;
+      if (cellData.row.index === totalRowIndex) {
+        cellData.cell.styles.fontStyle = 'bold';
+        cellData.cell.styles.fontSize = 9;
+        cellData.cell.styles.fillColor = [240, 240, 240];
       }
     },
   });
