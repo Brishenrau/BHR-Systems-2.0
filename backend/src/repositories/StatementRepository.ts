@@ -103,11 +103,11 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
     }
 
     // Query to find distinct account numbers
-    // Using VTK_PERMILIKAN table which contains property and owner information
+    // Using VTK_PEMILIKAN table which contains property and owner information
     const sql = `
       SELECT DISTINCT s.STA_NOMBAKAUN
       FROM ${this.getFullTableName()} s
-      INNER JOIN SADM.VTK_PERMILIKAN p ON p.PEG_NOMBAKAUN = s.STA_NOMBAKAUN
+      INNER JOIN SADM.VTK_PEMILIKAN p ON p.PEG_NOMBAKAUN = s.STA_NOMBAKAUN
       WHERE ${conditions.join(' OR ')}
     `;
     
@@ -117,10 +117,10 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
 
   /**
    * Get property and owner details for an account number
-   * Fetches property and owner information from VTK_PERMILIKAN table
+   * Fetches property and owner information from VTK_PEMILIKAN table
    */
   async getPropertyDetails(nomBakaun: number): Promise<any> {
-    const tableName = 'SADM.VTK_PERMILIKAN';
+    const tableName = 'SADM.VTK_PEMILIKAN';
     
     const sql = `
       SELECT 
