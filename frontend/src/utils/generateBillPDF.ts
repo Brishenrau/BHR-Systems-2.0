@@ -378,16 +378,18 @@ export const generateBillPDF = async (
       lineWidth: 0.1,
     },
     columnStyles: {
-      0: { cellWidth: 100 }, // Keterangan Bil - increased
-      1: { cellWidth: 50, halign: 'right' }, // Jan-Jun - increased
-      2: { cellWidth: 50, halign: 'right' }, // Tahun - increased
+      0: { cellWidth: 80 }, // Keterangan Bil
+      1: { cellWidth: 40, halign: 'right' }, // Jan-Jun - right align body
+      2: { cellWidth: 40, halign: 'right' }, // Tahun - right align body
     },
     margin: { left: margin, right: margin },
-    tableWidth: pageWidth - 2 * margin, // Match green header line width
-    styles: {
-      cellPadding: 2, // Reduced padding
-    },
     didParseCell: (data: any) => {
+      // Center align only the "Jan-Jun" and "Tahun" header text
+      if (data.section === 'head') {
+        if (data.column.index === 1 || data.column.index === 2) {
+          data.cell.styles.halign = 'center';
+        }
+      }
       // Make total row bold and semi-transparent
       if (data.row.index === tableData.length - 1) {
         data.cell.styles.fontStyle = 'bold';
@@ -395,6 +397,9 @@ export const generateBillPDF = async (
         // Use a very light fill that's almost transparent
         data.cell.styles.fillColor = [250, 250, 250]; // Very light gray, almost transparent
       }
+    },
+    styles: {
+      cellPadding: 2, // Reduced padding
     },
   });
 
