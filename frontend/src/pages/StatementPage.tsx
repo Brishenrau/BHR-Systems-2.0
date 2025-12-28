@@ -367,28 +367,28 @@ export const StatementPage = () => {
                     <button
                       key={accNum}
                       onClick={() => handleAccountSelect(accNum)}
-                      className="w-full text-left p-3 hover:bg-blue-50 transition-colors"
+                      className="w-full text-left p-2 hover:bg-blue-50 transition-colors"
                     >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-gray-900 mb-1">
-                            Account: {accNum}
-                          </div>
-                          {details ? (
-                            <div className="text-xs text-gray-600 space-y-0.5">
-                              {details.ownerName && (
-                                <div className="truncate"><span className="font-medium">Owner:</span> {details.ownerName}</div>
-                              )}
-                              {details.propertyAddress && (
-                                <div className="whitespace-pre-line"><span className="font-medium">Address:</span> {details.propertyAddress}</div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="text-xs text-gray-400 italic">Loading details...</div>
-                          )}
-                        </div>
-                        <div className="ml-4 flex-shrink-0 text-blue-600">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="font-semibold text-gray-900 min-w-[80px]">Account: {accNum}</span>
+                        {details ? (
+                          <>
+                            {details.ownerName && (
+                              <span className="text-gray-700 min-w-[200px] truncate">
+                                <span className="font-medium">Owner:</span> {details.ownerName}
+                              </span>
+                            )}
+                            {details.propertyAddress && (
+                              <span className="text-gray-600 flex-1 truncate">
+                                <span className="font-medium">Address:</span> {details.propertyAddress.replace(/\n/g, ', ')}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="text-gray-400 italic">Loading details...</span>
+                        )}
+                        <div className="ml-auto flex-shrink-0 text-blue-600">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </div>
