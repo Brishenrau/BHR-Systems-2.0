@@ -309,13 +309,18 @@ export const generateStatementPDF = async (
     ],
     theme: 'grid',
     headStyles: {
-      fillColor: [240, 240, 240],
+      fillColor: false, // Transparent header
       textColor: [0, 0, 0],
       fontStyle: 'bold',
       fontSize: 9,
+      lineColor: [0, 0, 0], // Keep borders visible
+      lineWidth: 0.1,
     },
     bodyStyles: {
       fontSize: 8,
+      fillColor: false, // Transparent body cells
+      lineColor: [0, 0, 0], // Keep borders visible
+      lineWidth: 0.1,
     },
     columnStyles: {
       0: { cellWidth: 25 },
@@ -332,20 +337,22 @@ export const generateStatementPDF = async (
     didParseCell: (cellData: any) => {
       const hasOpeningBalance = openingBalance !== 0;
       
-      // Style opening balance row
+      // Style opening balance row - semi-transparent
       if (hasOpeningBalance && cellData.row.index === 0) {
         cellData.cell.styles.fontStyle = 'bold';
-        cellData.cell.styles.fillColor = [230, 240, 255]; // Light blue background
+        // Use a very light fill that's almost transparent
+        cellData.cell.styles.fillColor = [245, 248, 255]; // Very light blue, almost transparent
         if (cellData.column.index === 2) {
           cellData.cell.styles.textColor = [0, 0, 0];
         }
       }
-      // Style total row
+      // Style total row - semi-transparent
       const totalRowIndex = hasOpeningBalance ? tableData.length : tableData.length - 1;
       if (cellData.row.index === totalRowIndex) {
         cellData.cell.styles.fontStyle = 'bold';
         cellData.cell.styles.fontSize = 9;
-        cellData.cell.styles.fillColor = [240, 240, 240];
+        // Use a very light fill that's almost transparent
+        cellData.cell.styles.fillColor = [250, 250, 250]; // Very light gray, almost transparent
       }
     },
   });

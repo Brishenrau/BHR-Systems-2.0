@@ -363,13 +363,18 @@ export const generateBillPDF = async (
     body: tableData,
     theme: 'grid',
     headStyles: {
-      fillColor: [240, 240, 240],
+      fillColor: false, // Transparent header
       textColor: [0, 0, 0],
       fontStyle: 'bold',
       fontSize: 9,
+      lineColor: [0, 0, 0], // Keep borders visible
+      lineWidth: 0.1,
     },
     bodyStyles: {
       fontSize: 8,
+      fillColor: false, // Transparent body cells
+      lineColor: [0, 0, 0], // Keep borders visible
+      lineWidth: 0.1,
     },
     columnStyles: {
       0: { cellWidth: 80 }, // Keterangan Bil
@@ -381,10 +386,12 @@ export const generateBillPDF = async (
       cellPadding: 2, // Reduced padding
     },
     didParseCell: (data: any) => {
-      // Make total row bold
+      // Make total row bold and semi-transparent
       if (data.row.index === tableData.length - 1) {
         data.cell.styles.fontStyle = 'bold';
         data.cell.styles.fontSize = 9;
+        // Use a very light fill that's almost transparent
+        data.cell.styles.fillColor = [250, 250, 250]; // Very light gray, almost transparent
       }
     },
   });
