@@ -45,6 +45,29 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
   }
 
   /**
+   * Calculate opening balance from records older than 5 years
+   * This represents the carried forward balance from previous years
+   * @param nomBakaun - Account number
+   */
+  async calculateOpeningBalance(nomBakaun: number): Promise<number> {
+    const sql = `
+      SELECT 
+        NVL(SUM(
+          CASE 
+            WHEN STA_TRANSDRCR = 'D' THEN STA_AMOUNTTRX
+            ELSE -STA_AMOUNTTRX
+          END
+        ), 0) as OPENING_BALANCE
+      FROM ${this.getFullTableName()}
+      WHERE STA_NOMBAKAUN = :nomBakaun
+        AND STA_TARIKHTRX < ADD_MONTHS(SYSDATE, -60)
+    `;
+    
+    const result = await this.queryOne<{ OPENING_BALANCE: number }>(sql, { nomBakaun });
+    return result?.OPENING_BALANCE || 0;
+  }
+
+  /**
    * Get statement by account number and serial
    */
   async findByAccountAndSerial(

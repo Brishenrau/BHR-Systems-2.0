@@ -13,6 +13,7 @@ export interface BakhutangWithDescription extends TKN_BAKHUTANG {
 export interface StatementResponse {
   statements: StatementWithDescription[];
   bakhutang: BakhutangWithDescription[];
+  openingBalance?: number; // Carried forward balance from previous years (when showing only last 5 years)
   totals: {
     totalDebit: number;
     totalCredit: number;
@@ -36,6 +37,12 @@ export class StatementService {
       this.statementRepository.findByAccountNumber(nomBakaun, includeOlderRecords),
       this.bakhutangRepository.findByAccountNumber(nomBakaun),
     ]);
+
+    // Calculate opening balance from older records if not including older records
+    let openingBalance: number | undefined = undefined;
+    if (!includeOlderRecords) {
+      openingBalance = await this.statementRepository.calculateOpeningBalance(nomBakaun);
+    }
 
     // Get unique transaction codes
     const transCodes = new Set<string>();
@@ -72,11 +79,13 @@ export class StatementService {
       }
     });
 
-    const totalBalance = totalDebit - totalCredit;
+    // Total balance includes opening balance if present
+    const totalBalance = (openingBalance || 0) + totalDebit - totalCredit;
 
     return {
       statements: statementsWithDesc,
       bakhutang: bakhutangWithDesc,
+      openingBalance,
       totals: {
         totalDebit,
         totalCredit,

@@ -53,9 +53,10 @@ export const StatementPage = () => {
   };
 
   // Calculate running balance (statements are already in chronological order from backend)
-  const calculateBalances = (statements: TKN_STATEMENT[]): Map<number, number> => {
+  // Start from opening balance if present (carried forward from previous years)
+  const calculateBalances = (statements: TKN_STATEMENT[], openingBalance: number = 0): Map<number, number> => {
     const balances = new Map<number, number>();
-    let runningBalance = 0;
+    let runningBalance = openingBalance;
 
     statements.forEach((stmt, index) => {
       if (stmt.STA_TRANSDRCR === 'D') {
@@ -247,7 +248,7 @@ export const StatementPage = () => {
     }
   };
 
-  const balances = data ? calculateBalances(data.statements) : new Map();
+  const balances = data ? calculateBalances(data.statements, data.openingBalance || 0) : new Map();
   // Statements are already in chronological order from backend, no need to sort
   const sortedStatements = data ? data.statements : [];
 
@@ -762,6 +763,31 @@ export const StatementPage = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
+                  {/* Opening Balance Row (Carried Forward from Previous Years) */}
+                  {data && data.openingBalance !== undefined && data.openingBalance !== 0 && (
+                    <tr className="bg-blue-50 font-semibold">
+                      <td colSpan={7} className="px-2 py-1.5 text-xs text-gray-700 border-r border-gray-200">
+                        BAKI BAWAAN (Carried Forward Balance)
+                      </td>
+                      <td className="px-2 py-1.5 whitespace-nowrap text-xs text-center text-gray-700 border-r border-gray-200">
+                        -
+                      </td>
+                      <td className="px-2 py-1.5 whitespace-nowrap text-xs text-right text-gray-700 border-r border-gray-200">
+                        -
+                      </td>
+                      <td className="px-2 py-1.5 whitespace-nowrap text-xs text-right text-gray-700 border-r border-gray-200">
+                        -
+                      </td>
+                      <td className={`px-2 py-1.5 whitespace-nowrap text-xs text-right border-r border-gray-200 ${
+                        data.openingBalance < 0 ? 'text-red-600' : 'text-gray-900'
+                      }`}>
+                        {data.openingBalance < 0 
+                          ? `<${formatCurrency(Math.abs(data.openingBalance))}>`
+                          : formatCurrency(data.openingBalance)
+                        }
+                      </td>
+                    </tr>
+                  )}
                   {sortedStatements.map((stmt, index) => {
                     const balance = balances.get(index) || 0;
                     const isNegative = balance < 0;

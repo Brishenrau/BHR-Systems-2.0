@@ -104,6 +104,7 @@ export interface TKN_BAKHUTANG {
 export interface StatementResponse {
   statements: TKN_STATEMENT[];
   bakhutang: TKN_BAKHUTANG[];
+  openingBalance?: number; // Carried forward balance from previous years (when showing only last 5 years)
   totals: {
     totalDebit: number;
     totalCredit: number;
