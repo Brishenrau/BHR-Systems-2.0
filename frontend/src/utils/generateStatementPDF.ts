@@ -54,9 +54,7 @@ export const generateStatementPDF = async (
     console.warn('Watermark not loaded');
   }
 
-  // Page number - TOP RIGHT
-  doc.setFontSize(8);
-  doc.text('M/Surat: 1 / 1', pageWidth - margin, 8, { align: 'right' });
+  // Page numbers will be added dynamically after all content is drawn
 
   // Load and add logo image on the left
   try {
@@ -95,8 +93,8 @@ export const generateStatementPDF = async (
         
         // Position image above the text, starting at the M in MAJLIS
         mpkkImageHeight = 15; // Height of the image
-        // Position image above the text (yPos - image height - smaller gap)
-        doc.addImage(mpkkImg, 'JPEG', fullTextStartX, yPos - mpkkImageHeight - 0.5, textWidth, mpkkImageHeight);
+        // Position image above the text (yPos - image height - smaller gap, moved down 1mm)
+        doc.addImage(mpkkImg, 'JPEG', fullTextStartX, yPos - mpkkImageHeight + 0.5, textWidth, mpkkImageHeight);
         resolve();
       };
       mpkkImg.onerror = () => reject(new Error('MPKKJAWIS failed'));
@@ -130,7 +128,7 @@ export const generateStatementPDF = async (
   doc.text('No Faks: +604-4325229', contactRight, 25, { align: 'right' });
   doc.text('E-mail: info@mpkk.gov.my', contactRight, 30, { align: 'right' });
 
-  yPos += 8;
+  yPos += 5; // Reduced space
 
   // DARK GREEN BAR - Main Title
   doc.setFillColor(0, 128, 0);
@@ -148,7 +146,7 @@ export const generateStatementPDF = async (
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.text('MAKLUMAT PEMILIK dan HARTA PEGANGAN', margin + 3, yPos + 4);
-  yPos += 10;
+  yPos += 8; // Reduced space
 
   // Format account number
   const accountNumber = propertyDetails?.accountNumber || data.statements[0]?.STA_NOMBAKAUN || 0;
@@ -168,13 +166,13 @@ export const generateStatementPDF = async (
   doc.text('Nombor Akaun:', leftX, leftY);
   doc.setFont('helvetica', 'normal');
   doc.text(formattedAccountNumber, leftX + labelOffset, leftY);
-  leftY += 6;
+  leftY += 5; // Reduced spacing
 
   doc.setFont('helvetica', 'bold');
   doc.text('Nama Pemilik:', leftX, leftY);
   doc.setFont('helvetica', 'normal');
   doc.text(propertyDetails?.ownerName || '', leftX + labelOffset, leftY);
-  leftY += 6;
+  leftY += 5; // Reduced spacing
 
   doc.setFont('helvetica', 'bold');
   doc.text('Alamat Surat:', leftX, leftY);
@@ -182,12 +180,12 @@ export const generateStatementPDF = async (
   const mailingAddress = propertyDetails?.mailingAddress || '';
   const mailingLines = doc.splitTextToSize(mailingAddress, 70);
   doc.text(mailingLines, leftX + labelOffset, leftY);
-  leftY += mailingLines.length * 5 + 2;
+  leftY += mailingLines.length * 4 + 1; // Reduced spacing
 
   doc.setFont('helvetica', 'bold');
   doc.text('Negeri:', leftX, leftY);
   doc.setFont('helvetica', 'normal');
-  leftY += 6;
+  leftY += 5; // Reduced spacing
 
   // RIGHT COLUMN
   doc.setFont('helvetica', 'bold');
@@ -199,7 +197,7 @@ export const generateStatementPDF = async (
     rightY,
     { align: 'right' }
   );
-  rightY += 6;
+  rightY += 5; // Reduced spacing
 
   doc.setFont('helvetica', 'bold');
   doc.text('% Kadar:', rightX, rightY);
@@ -210,7 +208,7 @@ export const generateStatementPDF = async (
     rightY,
     { align: 'right' }
   );
-  rightY += 6;
+  rightY += 5; // Reduced spacing
 
   doc.setFont('helvetica', 'bold');
   doc.text('Peratusan:', rightX, rightY);
@@ -221,7 +219,7 @@ export const generateStatementPDF = async (
     rightY,
     { align: 'right' }
   );
-  rightY += 6;
+  rightY += 5; // Reduced spacing
 
   doc.setFont('helvetica', 'bold');
   doc.text('Taksiran Tahunan:', rightX, rightY);
@@ -234,14 +232,14 @@ export const generateStatementPDF = async (
   );
 
   // Alamat Harta - BELOW COLUMNS, LEFT ALIGNED
-  yPos = Math.max(leftY, rightY) + 8;
+  yPos = Math.max(leftY, rightY) + 6; // Reduced spacing
   doc.setFont('helvetica', 'bold');
   doc.text('Alamat Harta:', leftX, yPos);
   doc.setFont('helvetica', 'normal');
   const propertyAddress = propertyDetails?.propertyAddress || '';
   const propertyLines = doc.splitTextToSize(propertyAddress, 80);
   doc.text(propertyLines, leftX + labelOffset, yPos);
-  yPos += propertyLines.length * 5 + 8;
+  yPos += propertyLines.length * 4 + 6; // Reduced spacing
 
   // Baki Akhir
   const lastTransaction = data.statements[data.statements.length - 1];
@@ -254,7 +252,7 @@ export const generateStatementPDF = async (
   doc.text(`Baki Akhir: ${endingBalanceDate}`, margin, yPos);
   doc.setFont('helvetica', 'normal');
   doc.text(formatCurrency(data.totals.totalBalance), margin + 60, yPos, { align: 'right' });
-  yPos += 10;
+  yPos += 8; // Reduced spacing
 
   // Transaction Table
   let runningBalance = 0;
@@ -320,12 +318,29 @@ export const generateStatementPDF = async (
         data.cell.styles.fillColor = [240, 240, 240];
       }
     },
+    // Add page numbers to each page
+    didDrawPage: (data: any) => {
+      const pageNumber = data.pageNumber;
+      const totalPages = (doc as any).internal.getNumberOfPages();
+      doc.setFontSize(8);
+      doc.text(`M/Surat: ${pageNumber} / ${totalPages}`, pageWidth - margin, 8, { align: 'right' });
+    },
   });
+
+  // Get total pages after table is drawn
+  const totalPages = (doc as any).internal.getNumberOfPages();
 
   // Footer
   const finalY = (doc as any).lastAutoTable?.finalY || yPos + 50;
   doc.setFontSize(7);
   doc.text(`Dicetak pada ${formatDate(new Date())} ${new Date().toLocaleTimeString('en-GB')}`, margin, pageHeight - 10);
+
+  // Update page numbers on all pages
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.text(`M/Surat: ${i} / ${totalPages}`, pageWidth - margin, 8, { align: 'right' });
+  }
 
   doc.save(`Penyata_Akaun_${formattedAccountNumber}.pdf`);
 };

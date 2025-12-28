@@ -158,8 +158,8 @@ export const generateBillPDF = async (
         
         // Position image above the text, starting at the M in MAJLIS
         mpkkImageHeight = 15; // Height of the image
-        // Position image above the text (yPos - image height - smaller gap)
-        doc.addImage(mpkkImg, 'JPEG', fullTextStartX, yPos - mpkkImageHeight - 0.5, textWidth, mpkkImageHeight);
+        // Position image above the text (yPos - image height - smaller gap, moved down 1mm)
+        doc.addImage(mpkkImg, 'JPEG', fullTextStartX, yPos - mpkkImageHeight + 0.5, textWidth, mpkkImageHeight);
         resolve();
       };
       mpkkImg.onerror = () => reject(new Error('MPKKJAWIS failed'));
@@ -193,7 +193,7 @@ export const generateBillPDF = async (
   doc.text('No Faks: +604-4325229', contactX, margin + 10, { align: 'right' });
   doc.text('E-mail: info@mpkk.gov.my', contactX, margin + 15, { align: 'right' });
 
-  yPos += 5;
+  yPos += 3; // Reduced space
 
   // Bill Title (green banner style)
   doc.setFillColor(0, 128, 0); // Green color
@@ -203,7 +203,7 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text('BIL AWAL CUKAI TAKSIRAN BAGI TAHUN ' + billYear, pageWidth / 2, yPos + 5.5, { align: 'center' });
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 12;
+  yPos += 10; // Reduced spacing
 
   // MAKLUMAT PEMILIK Section (with green header bar)
   doc.setFillColor(0, 128, 0); // Green color
@@ -213,7 +213,7 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text('MAKLUMAT PEMILIK', margin + 3, yPos + 4);
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 10;
+  yPos += 8; // Reduced spacing
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -226,10 +226,10 @@ export const generateBillPDF = async (
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.text(ownerName, margin, yPos);
-  yPos += 5;
+  yPos += 4; // Reduced spacing
   mailingLines.forEach((line: string) => {
     doc.text(line, margin, yPos);
-    yPos += 4;
+    yPos += 3.5; // Reduced spacing
   });
 
   // Right side - Account Details
@@ -269,7 +269,7 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text('MAKLUMAT HARTA/PEGANGAN', margin + 3, yPos + 4);
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 10;
+  yPos += 8; // Reduced spacing
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -283,7 +283,7 @@ export const generateBillPDF = async (
   const propertyLines = doc.splitTextToSize(propertyAddress, 70);
   propertyLines.forEach((line: string) => {
     doc.text(line, margin, yPos);
-    yPos += 4;
+    yPos += 3.5; // Reduced spacing
   });
 
   // Right side - Property Valuation
@@ -317,7 +317,7 @@ export const generateBillPDF = async (
     rightY
   );
 
-  yPos = Math.max(yPos, rightY) + 8;
+  yPos = Math.max(yPos, rightY) + 6; // Reduced spacing
 
   // MAKLUMAT BAYARAN Section (with green header bar)
   doc.setFillColor(0, 128, 0); // Green color
@@ -327,7 +327,7 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text('MAKLUMAT BAYARAN', margin + 3, yPos + 4);
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 10;
+  yPos += 8; // Reduced spacing
 
   // Payment Due Date (in red)
   doc.setFontSize(9);
@@ -335,13 +335,13 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'bold');
   doc.text(`Bayar Pada/Sebelum: ${formatDate(dueDate)}`, margin, yPos);
   doc.setTextColor(0, 0, 0); // Reset to black
-  yPos += 6;
+  yPos += 5; // Reduced spacing
 
   // "DITERIMA TANPA PREJUDIS" text (centered)
   doc.setFontSize(8);
   doc.setFont('helvetica', 'italic');
   doc.text('DITERIMA TANPA PREJUDIS', pageWidth / 2, yPos, { align: 'center' });
-  yPos += 8;
+  yPos += 6; // Reduced spacing
 
   // Payment Table
   const tableData = billRows.map((row) => [
@@ -378,7 +378,7 @@ export const generateBillPDF = async (
     },
     margin: { left: margin, right: margin },
     styles: {
-      cellPadding: 3,
+      cellPadding: 2, // Reduced padding
     },
     didParseCell: (data: any) => {
       // Make total row bold
@@ -387,7 +387,17 @@ export const generateBillPDF = async (
         data.cell.styles.fontSize = 9;
       }
     },
+    // Add page numbers to each page
+    didDrawPage: (data: any) => {
+      const pageNumber = data.pageNumber;
+      const totalPages = (doc as any).internal.getNumberOfPages();
+      doc.setFontSize(8);
+      doc.text(`M/Surat: ${pageNumber} / ${totalPages}`, pageWidth - margin, 8, { align: 'right' });
+    },
   });
+
+  // Get total pages after table is drawn
+  const totalPages = (doc as any).internal.getNumberOfPages();
 
   // Print info at bottom
   const finalY = (doc as any).lastAutoTable?.finalY || yPos + 50;
@@ -395,6 +405,13 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'normal');
   const printInfo = `Dicetak oleh: ${propertyDetails?.ownerName || 'System'} pada ${formatDate(new Date())} ${new Date().toLocaleTimeString('en-GB')}`;
   doc.text(printInfo, margin, pageHeight - 10);
+
+  // Update page numbers on all pages
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.text(`M/Surat: ${i} / ${totalPages}`, pageWidth - margin, 8, { align: 'right' });
+  }
 
   // Save PDF
   doc.save(`Bil_Awal_Cukai_Taksiran_${formattedAccountNumber}_${billYear}.pdf`);
