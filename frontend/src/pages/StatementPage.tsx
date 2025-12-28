@@ -118,7 +118,14 @@ export const StatementPage = () => {
         }),
       ]);
       setData(result);
-      setPropertyDetails(propertyInfo);
+      // Only set property details if it's not null and not an empty object
+      if (propertyInfo && Object.keys(propertyInfo).length > 0) {
+        setPropertyDetails(propertyInfo);
+        console.log('Property details received:', propertyInfo); // Debug log
+      } else {
+        setPropertyDetails(null);
+        console.log('No property details received or empty object'); // Debug log
+      }
       // Update account number field with the found account
       setAccountNumber(nomBakaun.toString());
     } catch (err) {
@@ -399,8 +406,11 @@ export const StatementPage = () => {
                     const balance = balances.get(index) || 0;
                     const isNegative = balance < 0;
                     
+                    // Create a unique key using account number, serial, transaction date, and reference
+                    const uniqueKey = `${stmt.STA_NOMBAKAUN}-${stmt.STA_NOMSERIAL}-${stmt.STA_TARIKHTRX}-${stmt.STA_REFERENCE}-${index}`;
+                    
                     return (
-                      <tr key={`${stmt.STA_NOMBAKAUN}-${stmt.STA_NOMSERIAL}`} className="hover:bg-gray-50">
+                      <tr key={uniqueKey} className="hover:bg-gray-50">
                         <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-900 border-r border-gray-200">
                           {formatDate(stmt.STA_TARIKHTRX)}
                         </td>

@@ -143,11 +143,20 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
     `;
     
     try {
+      console.log(`Fetching property details for account: ${nomBakaun}`);
       const result = await this.queryOne<any>(sql, { nomBakaun });
       
       if (!result) {
+        console.log(`No property details found for account: ${nomBakaun}`);
         return null;
       }
+
+      console.log(`Property details found for account ${nomBakaun}:`, {
+        accountNumber: result.accountNumber,
+        ownerName: result.ownerName,
+        propertyAddress: result.propertyAddress,
+        hasData: Object.keys(result).length > 0
+      });
 
       // Format CTA calculation if values are available
       if (result.newValue && result.ratePerYear && result.percentage) {
