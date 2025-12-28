@@ -37,43 +37,9 @@ export const generateStatementPDF = async (
     return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
   };
 
-  // Watermark - load first
-  try {
-    const watermarkImg = new Image();
-    watermarkImg.crossOrigin = 'anonymous';
-    watermarkImg.src = '/WATERMARK.jpg';
-    await new Promise<void>((resolve, reject) => {
-      watermarkImg.onload = () => {
-        doc.addImage(watermarkImg, 'JPEG', pageWidth / 2 - 50, pageHeight / 2 - 50, 100, 100, undefined, 'FAST');
-        resolve();
-      };
-      watermarkImg.onerror = () => reject(new Error('Watermark failed'));
-      setTimeout(() => reject(new Error('Timeout')), 3000);
-    });
-  } catch (error) {
-    console.warn('Watermark not loaded');
-  }
-
   // Page number - TOP RIGHT
   doc.setFontSize(8);
   doc.text('M/Surat: 1 / 1', pageWidth - margin, 8, { align: 'right' });
-
-  // Logo - TOP LEFT
-  try {
-    const logoImg = new Image();
-    logoImg.crossOrigin = 'anonymous';
-    logoImg.src = '/MPKKJAWIS.jpg';
-    await new Promise<void>((resolve, reject) => {
-      logoImg.onload = () => {
-        doc.addImage(logoImg, 'JPEG', margin, yPos, 20, 20);
-        resolve();
-      };
-      logoImg.onerror = () => reject(new Error('Logo failed'));
-      setTimeout(() => reject(new Error('Timeout')), 3000);
-    });
-  } catch (error) {
-    console.warn('Logo not loaded');
-  }
 
   // Council Name - CENTERED, BOLD, LARGE
   doc.setFontSize(16);

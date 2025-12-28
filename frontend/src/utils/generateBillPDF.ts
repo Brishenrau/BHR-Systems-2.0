@@ -1,7 +1,5 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import QRCode from 'qrcode';
-import JsBarcode from 'jsbarcode';
 import type { StatementResponse, TKN_BAKHUTANG } from '../types/database.types';
 
 interface PropertyDetails {
@@ -64,28 +62,6 @@ export const generateBillPDF = async (
   const accountNumber = propertyDetails?.accountNumber || data.statements[0]?.STA_NOMBAKAUN || 0;
   const formattedAccountNumber = `T${String(accountNumber).padStart(9, '0')}`;
 
-  // Load watermark first (to appear behind content)
-  let watermarkImg: HTMLImageElement | null = null;
-  try {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = '/WATERMARK.jpg';
-    await new Promise<void>((resolve, reject) => {
-      img.onload = () => {
-        watermarkImg = img;
-        resolve();
-      };
-      img.onerror = () => reject(new Error('Watermark load failed'));
-      setTimeout(() => reject(new Error('Watermark load timeout')), 3000);
-    });
-    // Add watermark as background (before other content)
-    if (watermarkImg) {
-      doc.addImage(watermarkImg, 'JPEG', pageWidth / 2 - 50, pageHeight / 2 - 50, 100, 100, undefined, 'FAST');
-    }
-  } catch (error) {
-    console.warn('Could not load watermark:', error);
-  }
-
   // Build bill rows according to SQL query structure
   const billRows: BillRow[] = [];
 
@@ -127,22 +103,6 @@ export const generateBillPDF = async (
   // Calculate totals
   const totalJanJun = billRows.reduce((sum, row) => sum + row.janJunAmount, 0);
   const totalTahun = billRows.reduce((sum, row) => sum + row.tahunAmount, 0);
-
-  // Load and add logo image
-  try {
-    const logoImg = new Image();
-    logoImg.crossOrigin = 'anonymous';
-    logoImg.src = '/MPKKJAWIS.jpg';
-    await new Promise<void>((resolve, reject) => {
-      logoImg.onload = () => resolve();
-      logoImg.onerror = () => reject(new Error('Logo load failed'));
-      // Timeout after 3 seconds
-      setTimeout(() => reject(new Error('Logo load timeout')), 3000);
-    });
-    doc.addImage(logoImg, 'JPEG', margin, yPos, 20, 20);
-  } catch (error) {
-    console.warn('Could not load logo image:', error);
-  }
 
   // Header - Council Name
   doc.setFontSize(16);
@@ -234,28 +194,6 @@ export const generateBillPDF = async (
   doc.setFont('helvetica', 'normal');
   doc.text(`Tahun ${billYear}`, rightColX + 28, rightY);
 
-  // Generate barcode for account number (top)
-  try {
-    const canvas = document.createElement('canvas');
-    JsBarcode(canvas, formattedAccountNumber, {
-      format: 'CODE128',
-      width: 1,
-      height: 20,
-      displayValue: false,
-    });
-    const barcodeDataUrl = canvas.toDataURL('image/png');
-    const barcodeImg = new Image();
-    barcodeImg.src = barcodeDataUrl;
-    await new Promise<void>((resolve, reject) => {
-      barcodeImg.onload = () => resolve();
-      barcodeImg.onerror = () => reject(new Error('Barcode load failed'));
-      setTimeout(() => reject(new Error('Barcode load timeout')), 3000);
-    });
-    doc.addImage(barcodeImg, 'PNG', rightColX, rightY + 5, 50, 8);
-  } catch (error) {
-    console.warn('Could not generate barcode:', error);
-  }
-
   yPos = Math.max(yPos, rightY + 15) + 5;
 
   // MAKLUMAT HARTA/PEGANGAN Section (with green header bar)
@@ -334,40 +272,6 @@ export const generateBillPDF = async (
   doc.setTextColor(0, 0, 0); // Reset to black
   yPos += 6;
 
-  // QR Code section (left side) - Use static QR code image or generate one
-  const qrCodeSize = 30;
-  const qrX = margin;
-  const qrY = yPos;
-
-  try {
-    // Try to use static QR code image first, otherwise generate one
-    const qrImg = new Image();
-    qrImg.crossOrigin = 'anonymous';
-    qrImg.src = '/QRCPBTPAY.jpg';
-    await new Promise<void>((resolve, reject) => {
-      qrImg.onload = () => resolve();
-      qrImg.onerror = () => {
-        // If static image fails, generate QR code for account number
-        QRCode.toDataURL(formattedAccountNumber, { width: 200 })
-          .then((dataUrl) => {
-            qrImg.src = dataUrl;
-            qrImg.onload = () => resolve();
-            qrImg.onerror = () => reject(new Error('QR code generation failed'));
-          })
-          .catch(() => reject(new Error('QR code generation failed')));
-      };
-      setTimeout(() => reject(new Error('QR code load timeout')), 3000);
-    });
-    doc.addImage(qrImg, qrImg.src.includes('QRCPBTPAY') ? 'JPEG' : 'PNG', qrX, qrY, qrCodeSize, qrCodeSize);
-  } catch (error) {
-    console.warn('Could not load/generate QR code:', error);
-  }
-
-  doc.setFontSize(7);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Sila scan untuk bayaran PBTPay Online', qrX, qrY + qrCodeSize + 3, { maxWidth: qrCodeSize });
-  yPos += qrCodeSize + 8;
-
   // "DITERIMA TANPA PREJUDIS" text (centered)
   doc.setFontSize(8);
   doc.setFont('helvetica', 'italic');
@@ -420,30 +324,8 @@ export const generateBillPDF = async (
     },
   });
 
-  // Bottom barcode
-  const finalY = (doc as any).lastAutoTable?.finalY || yPos + 50;
-  try {
-    const canvas = document.createElement('canvas');
-    JsBarcode(canvas, formattedAccountNumber, {
-      format: 'CODE128',
-      width: 1,
-      height: 20,
-      displayValue: false,
-    });
-    const barcodeDataUrl = canvas.toDataURL('image/png');
-    const barcodeImg = new Image();
-    barcodeImg.src = barcodeDataUrl;
-    await new Promise<void>((resolve, reject) => {
-      barcodeImg.onload = () => resolve();
-      barcodeImg.onerror = () => reject(new Error('Barcode load failed'));
-      setTimeout(() => reject(new Error('Barcode load timeout')), 3000);
-    });
-    doc.addImage(barcodeImg, 'PNG', pageWidth - margin - 50, finalY + 5, 50, 8);
-  } catch (error) {
-    console.warn('Could not generate bottom barcode:', error);
-  }
-
   // Print info at bottom
+  const finalY = (doc as any).lastAutoTable?.finalY || yPos + 50;
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   const printInfo = `Dicetak oleh: ${propertyDetails?.ownerName || 'System'} pada ${formatDate(new Date())} ${new Date().toLocaleTimeString('en-GB')}`;
