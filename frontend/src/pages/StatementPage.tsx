@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { statementService } from '../services/statement.service';
 import { useSidebarStore } from '../store/sidebarStore';
+import { generateStatementPDF } from '../utils/generateStatementPDF';
 import type { ApiError } from '../types/api.types';
 import type { StatementResponse, TKN_STATEMENT } from '../types/database.types';
 
@@ -398,6 +399,32 @@ export const StatementPage = () => {
                 })}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* PDF Download Button */}
+        {data && (
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={() => generateStatementPDF(data, propertyDetails)}
+              className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              title="Generate and download PDF"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                />
+              </svg>
+            </button>
           </div>
         )}
 
