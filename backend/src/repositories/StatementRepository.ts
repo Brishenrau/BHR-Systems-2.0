@@ -7,9 +7,11 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
 
   /**
    * Get all statements for an account number
+   * @param nomBakaun - Account number
+   * @param includeOlderRecords - If false, only show records from the last 5 years (default: false)
    */
-  async findByAccountNumber(nomBakaun: number): Promise<TKN_STATEMENT[]> {
-    const sql = `
+  async findByAccountNumber(nomBakaun: number, includeOlderRecords: boolean = false): Promise<TKN_STATEMENT[]> {
+    let sql = `
       SELECT 
         STA_NOMBAKAUN,
         STA_NOMSERIAL,
@@ -28,12 +30,18 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
         STA_ENTRYDATE
       FROM ${this.getFullTableName()}
       WHERE STA_NOMBAKAUN = :nomBakaun
-      ORDER BY STA_TARIKHTRX ASC, STA_TRANSCODE DESC, STA_TRANSDRCR DESC
     `;
     
-    return await this.query(sql, {
-      nomBakaun,
-    });
+    const binds: Record<string, any> = { nomBakaun };
+    
+    // If not including older records, filter to last 5 years
+    if (!includeOlderRecords) {
+      sql += ` AND STA_TARIKHTRX >= ADD_MONTHS(SYSDATE, -60)`;
+    }
+    
+    sql += ` ORDER BY STA_TARIKHTRX ASC, STA_TRANSCODE DESC, STA_TRANSDRCR DESC`;
+    
+    return await this.query(sql, binds);
   }
 
   /**

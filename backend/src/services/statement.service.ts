@@ -27,11 +27,13 @@ export class StatementService {
 
   /**
    * Get statement for an account number with transaction descriptions
+   * @param nomBakaun - Account number
+   * @param includeOlderRecords - If false, only show records from the last 5 years (default: false)
    */
-  async getStatementByAccount(nomBakaun: number): Promise<StatementResponse> {
+  async getStatementByAccount(nomBakaun: number, includeOlderRecords: boolean = false): Promise<StatementResponse> {
     // Fetch statements and debt information
     const [statements, bakhutang] = await Promise.all([
-      this.statementRepository.findByAccountNumber(nomBakaun),
+      this.statementRepository.findByAccountNumber(nomBakaun, includeOlderRecords),
       this.bakhutangRepository.findByAccountNumber(nomBakaun),
     ]);
 

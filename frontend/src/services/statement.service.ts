@@ -11,11 +11,17 @@ interface ApiResponse<T> {
 export const statementService = {
   /**
    * Get statement by account number
+   * @param nomBakaun - Account number
+   * @param includeOlderRecords - If true, include records older than 5 years (default: false)
    */
-  async getStatementByAccount(nomBakaun: number): Promise<StatementResponse> {
-    const response = await apiClient.get<ApiResponse<StatementResponse>>(
-      `/statements/${nomBakaun}`
-    );
+  async getStatementByAccount(nomBakaun: number, includeOlderRecords: boolean = false): Promise<StatementResponse> {
+    const params = new URLSearchParams();
+    if (includeOlderRecords) {
+      params.append('includeOlderRecords', 'true');
+    }
+    const queryString = params.toString();
+    const url = `/statements/${nomBakaun}${queryString ? `?${queryString}` : ''}`;
+    const response = await apiClient.get<ApiResponse<StatementResponse>>(url);
     return response.data.data;
   },
 

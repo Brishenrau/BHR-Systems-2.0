@@ -7,7 +7,7 @@ const statementService = new StatementService();
 
 /**
  * Get statement by account number
- * GET /api/v1/statements/:nomBakaun
+ * GET /api/v1/statements/:nomBakaun?includeOlderRecords=true
  */
 export const getStatementByAccount = async (req: Request, res: Response) => {
   try {
@@ -20,7 +20,10 @@ export const getStatementByAccount = async (req: Request, res: Response) => {
       });
     }
 
-    const result = await statementService.getStatementByAccount(nomBakaun);
+    // Check if user wants to include older records (default: false, so only last 5 years)
+    const includeOlderRecords = req.query.includeOlderRecords === 'true';
+
+    const result = await statementService.getStatementByAccount(nomBakaun, includeOlderRecords);
     
     res.json({
       success: true,
@@ -123,8 +126,9 @@ export const sendStatementEmail = async (req: Request, res: Response) => {
     }
 
     // Fetch statement and property details
+    // For email, include all records (older records included)
     const [statementData, propertyDetails] = await Promise.all([
-      statementService.getStatementByAccount(nomBakaun),
+      statementService.getStatementByAccount(nomBakaun, true),
       statementService.getPropertyDetails(nomBakaun).catch(() => null),
     ]);
 

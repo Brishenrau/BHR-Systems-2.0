@@ -25,6 +25,7 @@ export const StatementPage = () => {
   const [emailAddress, setEmailAddress] = useState<string>('');
   const [sendingEmail, setSendingEmail] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
+  const [includeOlderRecords, setIncludeOlderRecords] = useState<boolean>(false);
 
   // Collapse sidebar when component mounts, restore when unmounts
   useEffect(() => {
@@ -69,10 +70,15 @@ export const StatementPage = () => {
   };
 
   // Load statement data
-  const loadStatement = async () => {
+  const loadStatement = async (overrideIncludeOlderRecords?: boolean) => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Use override value if provided, otherwise use current state
+      const shouldIncludeOlderRecords = overrideIncludeOlderRecords !== undefined 
+        ? overrideIncludeOlderRecords 
+        : includeOlderRecords;
       
       let nomBakaun: number;
 
@@ -163,7 +169,7 @@ export const StatementPage = () => {
       }
 
       const [result, propertyInfo] = await Promise.all([
-        statementService.getStatementByAccount(nomBakaun),
+        statementService.getStatementByAccount(nomBakaun, shouldIncludeOlderRecords),
         statementService.getPropertyDetails(nomBakaun).catch((err) => {
           console.error('Failed to fetch property details:', err);
           return null; // Return null if property details fail, but don't block statement loading
@@ -213,7 +219,7 @@ export const StatementPage = () => {
       setError(null);
       
       const [result, propertyInfo] = await Promise.all([
-        statementService.getStatementByAccount(selectedAccountNumber),
+        statementService.getStatementByAccount(selectedAccountNumber, includeOlderRecords),
         statementService.getPropertyDetails(selectedAccountNumber).catch((err) => {
           console.error('Failed to fetch property details:', err);
           return null;
@@ -404,6 +410,38 @@ export const StatementPage = () => {
                 })}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Date Range Filter */}
+        {data && (
+          <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={includeOlderRecords}
+                onChange={async (e) => {
+                  const newValue = e.target.checked;
+                  setIncludeOlderRecords(newValue);
+                  // Reload statement with new filter
+                  const currentAccount = propertyDetails?.accountNumber || accountNumber || data.statements[0]?.STA_NOMBAKAUN;
+                  if (currentAccount) {
+                    const accountNum = typeof currentAccount === 'number' ? currentAccount : parseInt(currentAccount, 10);
+                    if (!isNaN(accountNum)) {
+                      // Use the new value directly instead of waiting for state update
+                      await loadStatement(newValue);
+                    }
+                  }
+                }}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                Tunjukkan rekod lebih lama daripada 5 tahun (Show records older than 5 years)
+              </span>
+            </label>
+            <p className="text-xs text-gray-500 mt-1 ml-6">
+              Secara lalai, hanya rekod dari 5 tahun lepas dipaparkan (By default, only records from the last 5 years are shown)
+            </p>
           </div>
         )}
 
