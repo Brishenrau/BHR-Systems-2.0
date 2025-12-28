@@ -17,6 +17,8 @@ export const StatementPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [propertyDetails, setPropertyDetails] = useState<any>(null);
+  const [matchingAccounts, setMatchingAccounts] = useState<number[]>([]);
+  const [accountDetails, setAccountDetails] = useState<Map<number, any>>(new Map());
 
   // Collapse sidebar when component mounts, restore when unmounts
   useEffect(() => {
@@ -86,13 +88,35 @@ export const StatementPage = () => {
         const accountNumbers = await statementService.searchAccounts({ address: address.trim() });
         if (accountNumbers.length === 0) {
           setError('No accounts found with the given address');
+          setMatchingAccounts([]);
           return;
         }
         if (accountNumbers.length > 1) {
-          setError(`Multiple accounts found (${accountNumbers.length}). Please use account number search.`);
-          return;
+          // Store matching accounts and fetch their details for display
+          setMatchingAccounts(accountNumbers);
+          setError(null);
+          // Fetch property details for all matching accounts (limit to first 100)
+          const detailsMap = new Map<number, any>();
+          const accountsToFetch = accountNumbers.slice(0, 100);
+          await Promise.all(
+            accountsToFetch.map(async (accNum) => {
+              try {
+                const details = await statementService.getPropertyDetails(accNum);
+                if (details) {
+                  detailsMap.set(accNum, details);
+                }
+              } catch (err) {
+                console.error(`Failed to fetch details for account ${accNum}:`, err);
+              }
+            })
+          );
+          setAccountDetails(detailsMap);
+          setData(null);
+          setPropertyDetails(null);
+          return; // Don't load statement yet, wait for user selection
         }
         nomBakaun = accountNumbers[0];
+        setMatchingAccounts([]);
       } else { // name
         if (!ownerName || ownerName.trim() === '') {
           setError('Please enter owner name');
@@ -101,13 +125,35 @@ export const StatementPage = () => {
         const accountNumbers = await statementService.searchAccounts({ ownerName: ownerName.trim() });
         if (accountNumbers.length === 0) {
           setError('No accounts found with the given owner name');
+          setMatchingAccounts([]);
           return;
         }
         if (accountNumbers.length > 1) {
-          setError(`Multiple accounts found (${accountNumbers.length}). Please use account number search.`);
-          return;
+          // Store matching accounts and fetch their details for display
+          setMatchingAccounts(accountNumbers);
+          setError(null);
+          // Fetch property details for all matching accounts (limit to first 100)
+          const detailsMap = new Map<number, any>();
+          const accountsToFetch = accountNumbers.slice(0, 100);
+          await Promise.all(
+            accountsToFetch.map(async (accNum) => {
+              try {
+                const details = await statementService.getPropertyDetails(accNum);
+                if (details) {
+                  detailsMap.set(accNum, details);
+                }
+              } catch (err) {
+                console.error(`Failed to fetch details for account ${accNum}:`, err);
+              }
+            })
+          );
+          setAccountDetails(detailsMap);
+          setData(null);
+          setPropertyDetails(null);
+          return; // Don't load statement yet, wait for user selection
         }
         nomBakaun = accountNumbers[0];
+        setMatchingAccounts([]);
       }
 
       const [result, propertyInfo] = await Promise.all([
@@ -128,6 +174,7 @@ export const StatementPage = () => {
       }
       // Update account number field with the found account
       setAccountNumber(nomBakaun.toString());
+      setMatchingAccounts([]); // Clear matching accounts when statement is loaded
       
       // Auto-scroll to bottom after data loads
       setTimeout(() => {
@@ -146,6 +193,46 @@ export const StatementPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     loadStatement();
+  };
+
+  // Handle account selection from the list
+  const handleAccountSelect = async (selectedAccountNumber: number) => {
+    setAccountNumber(selectedAccountNumber.toString());
+    setMatchingAccounts([]);
+    setAccountDetails(new Map());
+    
+    // Load statement for selected account
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const [result, propertyInfo] = await Promise.all([
+        statementService.getStatementByAccount(selectedAccountNumber),
+        statementService.getPropertyDetails(selectedAccountNumber).catch((err) => {
+          console.error('Failed to fetch property details:', err);
+          return null;
+        }),
+      ]);
+      
+      setData(result);
+      if (propertyInfo && Object.keys(propertyInfo).length > 0) {
+        setPropertyDetails(propertyInfo);
+      } else {
+        setPropertyDetails(null);
+      }
+      
+      // Auto-scroll to bottom after data loads
+      setTimeout(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      }, 100);
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message || 'Failed to load statement');
+      console.error('Failed to load statement:', err);
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const balances = data ? calculateBalances(data.statements) : new Map();
@@ -256,6 +343,61 @@ export const StatementPage = () => {
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
             {error}
+          </div>
+        )}
+
+        {/* Matching Accounts Selection List */}
+        {matchingAccounts.length > 0 && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-900">
+                {matchingAccounts.length} {matchingAccounts.length === 1 ? 'account' : 'accounts'} found. Please select one:
+              </h3>
+              {matchingAccounts.length > 100 && (
+                <span className="text-xs text-gray-500">
+                  (Showing first 100 results)
+                </span>
+              )}
+            </div>
+            <div className="max-h-96 overflow-y-auto border border-gray-200 rounded bg-white">
+              <div className="divide-y divide-gray-200">
+                {matchingAccounts.slice(0, 100).map((accNum) => {
+                  const details = accountDetails.get(accNum);
+                  return (
+                    <button
+                      key={accNum}
+                      onClick={() => handleAccountSelect(accNum)}
+                      className="w-full text-left p-3 hover:bg-blue-50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 mb-1">
+                            Account: {accNum}
+                          </div>
+                          {details ? (
+                            <div className="text-xs text-gray-600 space-y-0.5">
+                              {details.ownerName && (
+                                <div className="truncate"><span className="font-medium">Owner:</span> {details.ownerName}</div>
+                              )}
+                              {details.propertyAddress && (
+                                <div className="whitespace-pre-line"><span className="font-medium">Address:</span> {details.propertyAddress}</div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-xs text-gray-400 italic">Loading details...</div>
+                          )}
+                        </div>
+                        <div className="ml-4 flex-shrink-0 text-blue-600">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
 
