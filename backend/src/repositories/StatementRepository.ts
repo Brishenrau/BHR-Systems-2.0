@@ -92,9 +92,8 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
     }
 
     if (searchCriteria.ownerName) {
-      // Adjust column name for owner name - this is a placeholder
-      // You may need to join with a different table for owner information
-      conditions.push('UPPER(p.NAMA_PEMILIK) LIKE UPPER(:ownerName)');
+      // Owner name column in VTK_PEMILIKAN is PEM_NAMAMILIK
+      conditions.push('UPPER(p.PEM_NAMAMILIK) LIKE UPPER(:ownerName)');
       binds.ownerName = `%${searchCriteria.ownerName}%`;
     }
 
@@ -107,7 +106,7 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
     const sql = `
       SELECT DISTINCT s.STA_NOMBAKAUN
       FROM ${this.getFullTableName()} s
-      INNER JOIN SADM.VTK_PEMILIKAN p ON p.PEG_NOMBAKAUN = s.STA_NOMBAKAUN
+      INNER JOIN SADM.VTK_PEMILIKAN p ON p.PEM_NOMBAKAUN = s.STA_NOMBAKAUN
       WHERE ${conditions.join(' OR ')}
     `;
     
@@ -124,7 +123,7 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
     
     const sql = `
       SELECT 
-        p.PEG_NOMBAKAUN as accountNumber,
+        p.PEM_NOMBAKAUN as accountNumber,
         p.PEG_ALAMATHRT as propertyAddress,
         p.PEG_NOMBORLOT as lotNumber,
         p.PEG_XCORDINAT as xCoordinate,
@@ -133,9 +132,14 @@ export class StatementRepository extends BaseRepository<TKN_STATEMENT> {
         p.PEG_NILAIBARU as newValue,
         p.PEG_KADARTHUN as ratePerYear,
         p.PEG_CUKAIBARU as newTax,
-        p.NAMA_PEMILIK as ownerName
+        p.PEM_NAMAMILIK as ownerName,
+        p.PEM_ALAMATSRT as mailingAddress,
+        p.PEG_LORONGKOD as laneCode,
+        p.PEG_JALANCODE as roadCode,
+        p.MIL_MILIKNAME as ownerType,
+        p.RAC_RACESNAME as race
       FROM ${tableName} p
-      WHERE p.PEG_NOMBAKAUN = :nomBakaun
+      WHERE p.PEM_NOMBAKAUN = :nomBakaun
     `;
     
     try {
