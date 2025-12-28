@@ -37,6 +37,23 @@ export const generateStatementPDF = async (
     return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
   };
 
+  // Load watermark first (to appear behind content)
+  try {
+    const watermarkImg = new Image();
+    watermarkImg.crossOrigin = 'anonymous';
+    watermarkImg.src = '/WATERMARK.jpg';
+    await new Promise<void>((resolve, reject) => {
+      watermarkImg.onload = () => {
+        doc.addImage(watermarkImg, 'JPEG', pageWidth / 2 - 50, pageHeight / 2 - 50, 100, 100, undefined, 'FAST');
+        resolve();
+      };
+      watermarkImg.onerror = () => reject(new Error('Watermark failed'));
+      setTimeout(() => reject(new Error('Timeout')), 3000);
+    });
+  } catch (error) {
+    console.warn('Watermark not loaded');
+  }
+
   // Page number - TOP RIGHT
   doc.setFontSize(8);
   doc.text('M/Surat: 1 / 1', pageWidth - margin, 8, { align: 'right' });
@@ -56,6 +73,31 @@ export const generateStatementPDF = async (
     });
   } catch (error) {
     console.warn('Logo not loaded');
+  }
+
+  // Load and add MPKKJAWIS.jpg above "MAJLIS PERBANDARAN"
+  try {
+    const mpkkImg = new Image();
+    mpkkImg.crossOrigin = 'anonymous';
+    mpkkImg.src = '/MPKKJAWIS.jpg';
+    await new Promise<void>((resolve, reject) => {
+      mpkkImg.onload = () => {
+        // Calculate width of "MAJLIS PERBANDARAN" text
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        const textWidth = doc.getTextWidth('MAJLIS PERBANDARAN');
+        const textStartX = pageWidth / 2 - textWidth / 2;
+        
+        // Position image above the text, spanning from M to N
+        const imgHeight = 15; // Height of the image
+        doc.addImage(mpkkImg, 'JPEG', textStartX, yPos, textWidth, imgHeight);
+        resolve();
+      };
+      mpkkImg.onerror = () => reject(new Error('MPKKJAWIS failed'));
+      setTimeout(() => reject(new Error('Timeout')), 3000);
+    });
+  } catch (error) {
+    console.warn('MPKKJAWIS not loaded');
   }
 
   // Council Name - CENTERED, BOLD, LARGE

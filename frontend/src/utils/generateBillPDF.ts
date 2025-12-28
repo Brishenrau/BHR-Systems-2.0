@@ -62,6 +62,23 @@ export const generateBillPDF = async (
   const accountNumber = propertyDetails?.accountNumber || data.statements[0]?.STA_NOMBAKAUN || 0;
   const formattedAccountNumber = `T${String(accountNumber).padStart(9, '0')}`;
 
+  // Load watermark first (to appear behind content)
+  try {
+    const watermarkImg = new Image();
+    watermarkImg.crossOrigin = 'anonymous';
+    watermarkImg.src = '/WATERMARK.jpg';
+    await new Promise<void>((resolve, reject) => {
+      watermarkImg.onload = () => {
+        doc.addImage(watermarkImg, 'JPEG', pageWidth / 2 - 50, pageHeight / 2 - 50, 100, 100, undefined, 'FAST');
+        resolve();
+      };
+      watermarkImg.onerror = () => reject(new Error('Watermark failed'));
+      setTimeout(() => reject(new Error('Timeout')), 3000);
+    });
+  } catch (error) {
+    console.warn('Watermark not loaded');
+  }
+
   // Build bill rows according to SQL query structure
   const billRows: BillRow[] = [];
 
@@ -119,6 +136,31 @@ export const generateBillPDF = async (
     });
   } catch (error) {
     console.warn('Logo not loaded');
+  }
+
+  // Load and add MPKKJAWIS.jpg above "MAJLIS PERBANDARAN"
+  try {
+    const mpkkImg = new Image();
+    mpkkImg.crossOrigin = 'anonymous';
+    mpkkImg.src = '/MPKKJAWIS.jpg';
+    await new Promise<void>((resolve, reject) => {
+      mpkkImg.onload = () => {
+        // Calculate width of "MAJLIS PERBANDARAN" text
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        const textWidth = doc.getTextWidth('MAJLIS PERBANDARAN');
+        const textStartX = pageWidth / 2 - textWidth / 2;
+        
+        // Position image above the text, spanning from M to N
+        const imgHeight = 15; // Height of the image
+        doc.addImage(mpkkImg, 'JPEG', textStartX, yPos, textWidth, imgHeight);
+        resolve();
+      };
+      mpkkImg.onerror = () => reject(new Error('MPKKJAWIS failed'));
+      setTimeout(() => reject(new Error('Timeout')), 3000);
+    });
+  } catch (error) {
+    console.warn('MPKKJAWIS not loaded');
   }
 
   // Header - Council Name
