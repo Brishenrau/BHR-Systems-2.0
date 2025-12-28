@@ -45,5 +45,18 @@ export const statementService = {
     );
     return response.data.data;
   },
+
+  /**
+   * Send statement PDF via email
+   */
+  async sendStatementEmail(nomBakaun: number, email: string): Promise<void> {
+    const response = await apiClient.post<ApiResponse<{ message: string }>>(
+      `/statements/${nomBakaun}/email`,
+      { email }
+    );
+    if (!response.data.success) {
+      throw new Error(response.data.message || 'Failed to send email');
+    }
+  },
 };
 

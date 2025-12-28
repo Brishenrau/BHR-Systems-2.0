@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getStatementByAccount, searchAccounts, getPropertyDetails } from '../controllers/statement.controller';
+import { getStatementByAccount, searchAccounts, getPropertyDetails, sendStatementEmail } from '../controllers/statement.controller';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -9,6 +9,9 @@ router.use(authenticate);
 
 // Search for accounts
 router.get('/search', searchAccounts);
+
+// Send statement via email
+router.post('/:nomBakaun/email', sendStatementEmail);
 
 // Get property details by account number
 router.get('/:nomBakaun/property', getPropertyDetails);

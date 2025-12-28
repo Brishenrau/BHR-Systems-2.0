@@ -20,6 +20,10 @@ export const StatementPage = () => {
   const [propertyDetails, setPropertyDetails] = useState<any>(null);
   const [matchingAccounts, setMatchingAccounts] = useState<number[]>([]);
   const [accountDetails, setAccountDetails] = useState<Map<number, any>>(new Map());
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [emailAddress, setEmailAddress] = useState<string>('');
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState<string | null>(null);
 
   // Collapse sidebar when component mounts, restore when unmounts
   useEffect(() => {
@@ -402,9 +406,9 @@ export const StatementPage = () => {
           </div>
         )}
 
-        {/* PDF Download Button */}
+        {/* PDF Download and Email Buttons */}
         {data && (
-          <div className="mb-4 flex justify-end">
+          <div className="mb-4 flex justify-end gap-2">
             <button
               onClick={() => generateStatementPDF(data, propertyDetails)}
               className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
@@ -425,6 +429,118 @@ export const StatementPage = () => {
                 />
               </svg>
             </button>
+            <button
+              onClick={() => setShowEmailDialog(true)}
+              className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              title="Send PDF via email"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        {/* Email Dialog */}
+        {showEmailDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Send Statement via Email</h3>
+              
+              {emailSuccess ? (
+                <div className="mb-4">
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+                    {emailSuccess}
+                  </div>
+                  <button
+                    onClick={() => {
+                      setShowEmailDialog(false);
+                      setEmailSuccess(null);
+                      setEmailAddress('');
+                    }}
+                    className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-4">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={emailAddress}
+                      onChange={(e) => setEmailAddress(e.target.value)}
+                      placeholder="Enter email address"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      disabled={sendingEmail}
+                    />
+                  </div>
+                  
+                  {error && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                      {error}
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        setShowEmailDialog(false);
+                        setEmailAddress('');
+                        setError(null);
+                      }}
+                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                      disabled={sendingEmail}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (!emailAddress || !emailAddress.includes('@')) {
+                          setError('Please enter a valid email address');
+                          return;
+                        }
+                        
+                        try {
+                          setSendingEmail(true);
+                          setError(null);
+                          const accountNum = propertyDetails?.accountNumber || data.statements[0]?.STA_NOMBAKAUN;
+                          if (!accountNum) {
+                            throw new Error('Account number not found');
+                          }
+                          await statementService.sendStatementEmail(accountNum, emailAddress);
+                          setEmailSuccess(`Statement PDF has been sent successfully to ${emailAddress}`);
+                        } catch (err) {
+                          const apiError = err as ApiError;
+                          setError(apiError.message || 'Failed to send email');
+                        } finally {
+                          setSendingEmail(false);
+                        }
+                      }}
+                      disabled={sendingEmail || !emailAddress}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {sendingEmail ? 'Sending...' : 'Send Email'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
 
